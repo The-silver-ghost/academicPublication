@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <span class="icon" onclick="navigateTo('home.html')">&#8962;</span>
+        <span class="header-title">Bookmarks</span>
+        <div class="search-container" style="width: 200px;">
+            <input type="text" placeholder="Search">
+            <span>&#128269;</span>
+        </div>
+        <span class="icon">&#128100;</span>
+    </header>
+
+    <div style="background: #000a20; padding: 10px; display: flex; justify-content: flex-end; align-items: center;">
+        <div class="pagenumber-container">
+            <span>20 Saved</span>
+            <span class="divider">|</span>
+            <a href="#" class="page-link">< Prev</a>
+            <a href="#" class="page-link active">1</a>
+            <a href="#" class="page-link">2</a>
+            <a href="#" class="page-link">3</a>
+            <a href="#" class="page-link">Next ></a>
+        </div>
+    </div>
+    <div class="list-container">
+        <div class="list-item">
+            <div class="index">1.</div>
+            <div class="front-page-placeholder">FRONT PAGE</div>
+            <div class="item-details">
+                <h3>Test Title 3</h3>
+                <p>Author Name</p>
+                <p>2026, PublicationType</p>
+            </div>
+            <div class="icon-bookmark filled" title="Unsave"></div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
