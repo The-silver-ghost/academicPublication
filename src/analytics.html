@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <span class="icon" onclick="navigateTo('home.html')">&#8962;</span>
+        <span class="header-title">Analytics</span>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn" style="background: #7a0f5a;">Faculty</button>
+            <button class="btn" style="background: #a34878;">Personal</button>
+        </div>
+        <span class="icon">&#128100;</span>
+    </header>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px;">
+        <div>
+            <h3>Papers Published Annually</h3>
+            <div class="chart-container">
+                <div class="bar" style="height: 40%; background: cyan;">2020</div>
+                <div class="bar" style="height: 40%; background: #33aadd;">2021</div>
+                <div class="bar" style="height: 70%; background: #2288cc;">2022</div>
+                <div class="bar" style="height: 90%; background: #1166aa;">2023</div>
+                <div class="bar" style="height: 70%; background: purple;">2024</div>
+            </div>
+            <button class="btn btn-blue" style="margin-top: 20px;">Generate Report</button>
+        </div>
+
+        <div>
+            <h3>Publication Types</h3>
+            <div style="width: 150px; height: 150px; border-radius: 50%; background: conic-gradient(orange 0% 25%, red 25% 40%, green 40% 65%, #2288cc 65% 100%); margin: 0 auto;"></div>
+
+            <h3>Author Productivity</h3>
+            <div>
+                <div class="bar-h" style="width: 80%; background: cyan; color: black;">Sanjeevan (10)</div>
+                <div class="bar-h" style="width: 60%; background: #33aadd;">Harvind (7)</div>
+                <div class="bar-h" style="width: 95%; background: #1166aa;">Aizad (16)</div>
+                <div class="bar-h" style="width: 40%; background: #114488;">Vidhya (5)</div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

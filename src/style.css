@@ -1,0 +1,345 @@
+:root {
+    --bg-dark: #000428;
+    --bg-panel: #001242;
+    --primary: #004e92;
+    --text-white: #ffffff;
+    --text-gray: #b0b0b0;
+    --status-green: #0f7a4d;
+    --status-orange: #d68100;
+    --status-purple: #7a0f5a;
+    --status-red: #d10000;
+}
+
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-white);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+/* Header */
+header {
+    background-color: var(--bg-dark);
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #333;
+}
+
+.icon {
+    font-size: 24px;
+    cursor: pointer;
+    text-decoration: none;
+    color: white;
+}
+
+.header-title {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+/* Search Bars */
+.search-container {
+    background: #ccc;
+    padding: 5px 10px;
+    display: flex;
+    align-items: center;
+    width: 300px;
+}
+
+.search-container input {
+    border: none;
+    background: transparent;
+    flex: 1;
+    padding: 5px;
+    font-size: 16px;
+    outline: none;
+}
+
+/* Common List Layout */
+.list-container {
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.filter-btn {
+    background-color: #334488;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    margin-bottom: 20px;
+}
+
+/* List Items */
+.list-item {
+    display: flex;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid #333;
+}
+
+.index {
+    font-size: 24px;
+    width: 40px;
+}
+
+.front-page-placeholder {
+    width: 60px;
+    height: 80px;
+    background-color: white;
+    color: black;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 10px;
+    margin-right: 20px;
+}
+
+.item-details {
+    flex: 1;
+}
+
+.item-details h3 {
+    margin: 0 0 5px 0;
+    font-size: 18px;
+}
+
+.item-details p {
+    margin: 0;
+    color: var(--text-gray);
+    font-size: 14px;
+}
+
+.item-meta {
+    width: 150px;
+    text-align: right;
+}
+
+/* Status Arrows */
+.status-arrow {
+    position: relative;
+    padding: 10px 20px;
+    color: white;
+    font-weight: bold;
+    width: 150px;
+    text-align: center;
+    clip-path: polygon(0% 0%, 85% 0%, 100% 50%, 85% 100%, 0% 100%);
+}
+
+.st-approved {
+    background-color: var(--status-green);
+}
+
+.st-review {
+    background-color: var(--status-orange);
+}
+
+.st-removed {
+    background-color: var(--status-purple);
+}
+
+.st-rejected {
+    background-color: var(--status-red);
+}
+
+/* Buttons */
+.btn {
+    padding: 8px 15px;
+    border: none;
+    cursor: pointer;
+    color: white;
+    border-radius: 4px;
+}
+
+.btn-blue {
+    background-color: #112266;
+}
+
+.btn-red {
+    background-color: #cc0000;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+}
+
+/* Login Form */
+.login-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.login-input {
+    background: #aaa;
+    border: none;
+    padding: 15px;
+    margin: 10px;
+    width: 300px;
+    font-size: 16px;
+    color: black;
+}
+
+/* Analytics Charts */
+.chart-container {
+    display: flex;
+    align-items: flex-end;
+    height: 200px;
+    gap: 10px;
+    padding: 20px;
+    border-left: 1px solid #555;
+    border-bottom: 1px solid #555;
+}
+
+.bar {
+    width: 40px;
+    background: teal;
+    text-align: center;
+    color: white;
+    font-size: 12px;
+}
+
+.bar-h {
+    height: 30px;
+    background: teal;
+    margin: 5px 0;
+    display: flex;
+    align-items: center;
+    padding-left: 10px;
+}
+
+/* Upload Form */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px;
+    border-radius: 20px;
+    border: none;
+}
+
+/* Sidebar styles */
+.sidebar {
+    height: 100%;
+    width: 250px;
+    position: fixed;
+    z-index: 1000; /* Stays on top */
+    top: 0;
+    left: -250px; /* Hidden off-screen by default */
+    background-color: #001242;
+    overflow-x: hidden;
+    transition: 0.3s; /* Smooth slide effect */
+    border-right: 1px solid #444;
+    padding-top: 60px;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.5);
+}
+
+.sidebar.active {
+    left: 0; /* Slide in */
+}
+
+/* Close button inside sidebar */
+.sidebar .close-btn {
+    position: absolute;
+    top: 10px;
+    right: 25px;
+    font-size: 36px;
+    margin-left: 50px;
+    color: white;
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+
+.sidebar a {
+    padding: 15px 25px;
+    text-decoration: none;
+    font-size: 18px;
+    color: #b0b0b0;
+    display: block;
+    transition: 0.3s;
+    border-bottom: 1px solid #112255;
+}
+
+.sidebar a:hover {
+    color: #f1f1f1;
+    background-color: #112255;
+}
+
+/* Overlay to darken background when menu is open */
+#overlay {
+    position: fixed;
+    display: none;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,0.7);
+    z-index: 999;
+    cursor: pointer;
+}
+
+/* Bookmark Icon */
+.icon-bookmark {
+    width: 20px;
+    height: 30px;
+    background-color: transparent;
+    border: 2px solid #ffffff;
+    clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 50% 70%, 0% 100%);
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.icon-bookmark:hover {
+    background-color: #ffffff;
+}
+
+.icon-bookmark.filled {
+    background-color: #ffffff;
+}
+
+/* Page numbers */
+.pagenumber-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: #b0b0b0;
+}
+
+.page-link {
+    color: #b0b0b0;
+    text-decoration: none;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: 0.2s;
+    cursor: pointer;
+}
+
+.page-link:hover {
+    background-color: #334488;
+    color: white;
+}
+
+.page-link.active {
+    background-color: #004e92;
+    color: white;
+    font-weight: bold;
+}
+
+.divider {
+    margin: 0 5px;
+    color: #555;
+}
