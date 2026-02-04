@@ -216,6 +216,30 @@ header {
     padding-left: 10px;
 }
 
+.pie {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: conic-gradient(orange 0% 25%, red 25% 40%, green 40% 65%, #2288cc 65% 100%);
+    margin: 0 auto;
+}
+
+.pie-legend{
+    display: flex;
+    flex-direction: column;
+    margin-top: 15px;
+    gap: 5px;
+    font-size: 14px;
+    color: white;
+}
+
+.legend-colour{
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    margin-right: 8px;
+    vertical-align: middle;
+}
 /* Upload Form */
 .form-group {
     margin-bottom: 15px;
