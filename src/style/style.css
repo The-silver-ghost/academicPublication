@@ -280,9 +280,9 @@ header {
 .sidebar .close-btn {
     position: absolute;
     top: 10px;
-    right: 25px;
+    /* right: 25px; */
     font-size: 36px;
-    margin-left: 50px;
+    margin-left: 10px;
     color: white;
     cursor: pointer;
     background: none;
