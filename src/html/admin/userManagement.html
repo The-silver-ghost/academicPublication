@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>User Management</title>
+        <link rel="stylesheet" href="../../style/style.css">
+        <script src="../../scripts/script.js" async></script>
+    </head>
+    <body>
+        <header>
+            <span class="icon" onclick="navigateTo('../admin/home.html')">&#8962;</span>
+            <span class="header-title">User Management</span>
+            <span class="icon">&#128100;</span>
+        </header>
+        <div id="side-by-side">
+            <div id="left-side">
+                <div id="user-buttons">
+                    <button class="btn btn-blue">New User</button>
+                    <button class="btn btn-blue">Existing User</button>
+                </div>
+                <select name="Faculty" class="drop-down">
+                    <option>FCI</option>
+                    <option>FCM</option>
+                    <option>FOM</option>
+                    <option>FAIE</option>
+                </select>
+                <select name="User Type" class="drop-down">
+                    <option>Admin</option>
+                    <option>Programme Coordinator</option>
+                    <option>Lecturer</option>
+                    <option>Student</option>
+                </select>
+            </div>
+            <div id="right-side">
+                <div id="search-panel">
+                    <div class="search-container adminSC">
+                        <input type="text" placeholder="Search" value="User ID">
+                    </div>
+                        <div class="search-container adminSC">
+                        <input type="text" placeholder="Search" value="Email">
+                    </div>
+                    <div class="search-container adminSC">
+                        <input type="text" placeholder="Search" value="Password">
+                    </div>
+                </div>
+                <div id="button-panel">
+                    <button class="btn btn-green">Confirm</button>
+                    <button class="btn btn-red-big">Deactivate User</button>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

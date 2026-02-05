@@ -5,14 +5,14 @@ document.addEventListener("DOMContentLoaded", function() {
             <button class="close-btn" onclick="toggleMenu()">&times;</button>
             <div style="padding: 20px; color: #555; font-size: 12px;">MENU</div>
             
-            <a href="#" onclick="navigateTo('bookmarks.html')">Bookmarks</a>
-            <a href="#" onclick="navigateTo('tracking_status.html')">Review (Coordinator)</a>
-            <a href="#" onclick="navigateTo('analytics.html')">Analytics</a>
-            <a href="#" onclick="navigateTo('upload.html')">Request Tracking</a>
-            <a href="#" onclick="navigateTo('status.html')">Status</a>
-            <a href="#" onclick="navigateTo('home.html')">Home</a>
+            <a href="#" onclick="navigateTo('../mainScreens/bookmarks.html')">Bookmarks</a>
+            <a href="#" onclick="navigateTo('../lecturerStudent/tracking_status.html')">Review (Coordinator)</a>
+            <a href="#" onclick="navigateTo('../mainScreens/analytics.html')">Analytics</a>
+            <a href="#" onclick="navigateTo('../lecturerStudent/upload.html')">Request Tracking</a>
+            <a href="#" onclick="navigateTo('../mainScreens/status.html')">Status</a>
+            <a href="#" onclick="navigateTo('../mainScreens/home.html')">Home</a>
             
-            <a href="#" onclick="navigateTo('login.html')" style="margin-top: 50px; color: #ff6666;">Logout</a>
+            <a href="#" onclick="navigateTo('../mainScreens/login.html')" style="margin-top: 50px; color: #ff6666;">Logout</a>
         </div>
     `;
     
