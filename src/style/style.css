@@ -22,7 +22,7 @@ body {
 
 /* Header */
 header {
-    background-color: var(--bg-dark);
+    background-color: #001242;
     padding: 15px 20px;
     display: flex;
     justify-content: space-between;
@@ -164,6 +164,14 @@ header {
 
 .btn-blue {
     background-color: #112266;
+}
+
+.btn-green {
+    background-color: #21d646;
+}
+
+.btn-red-big{
+    background-color: #cc0000;
 }
 
 .btn-red {
@@ -370,4 +378,52 @@ header {
 .divider {
     margin: 0 5px;
     color: #555;
+}
+
+#user-buttons {
+    display: flex;
+    justify-content: flex-start;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+#side-by-side{
+    display: flex;
+    justify-content: space-evenly;
+    margin-top: 45px;
+    gap: 8px;
+}
+
+#left-side{
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.drop-down{
+    height: 35px;
+    border-radius: 15px;
+}
+
+#right-side{
+    display: flex;
+    flex-direction: column;
+    margin-top: 55px;
+}
+
+#search-panel{
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.adminSC{
+    border-radius: 15px;
+}
+
+#button-panel{
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin: 45px;
 }
