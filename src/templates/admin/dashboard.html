@@ -1,15 +1,23 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <link rel="stylesheet" href="../../style/style.css">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </head>
+
 <body>
     <header>
         <span class="icon" onclick="navigateTo('../mainScreens/home.html')">&#8962;</span>
         <span class="header-title">Analytics</span>
         <div style="display: flex; gap: 10px;">
-            <button class="btn" style="background: #7a0f5a;">Faculty</button>
-            <button class="btn" style="background: #a34878;">Personal</button>
+            <button class="btn" id="adminDashBtn" style="background: #7a0f5a;">Faculty</button>
+        </div>
+        <div class="search-container" style="width: 500px;">
+            <span style="font-weight: bold;">Search...</span>
+            <input type="text">
+            <span>&#128269;</span>
         </div>
         <span class="icon">&#128100;</span>
     </header>
@@ -29,7 +37,9 @@
 
         <div>
             <h3>Publication Types</h3>
-            <div style="width: 150px; height: 150px; border-radius: 50%; background: conic-gradient(orange 0% 25%, red 25% 40%, green 40% 65%, #2288cc 65% 100%); margin: 0 auto;"></div>
+            <div
+                style="width: 150px; height: 150px; border-radius: 50%; background: conic-gradient(orange 0% 25%, red 25% 40%, green 40% 65%, #2288cc 65% 100%); margin: 0 auto;">
+            </div>
 
             <h3>Author Productivity</h3>
             <div>
@@ -40,6 +50,6 @@
             </div>
         </div>
     </div>
-    <script src="../../scripts/script.js"></script>
 </body>
+
 </html>

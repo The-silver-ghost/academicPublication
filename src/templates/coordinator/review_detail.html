@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link rel="stylesheet" href="../../style/style.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
         .review-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; padding: 20px; }
         .review-box { background: white; color: black; padding: 20px; border-radius: 10px; height: 150px; }

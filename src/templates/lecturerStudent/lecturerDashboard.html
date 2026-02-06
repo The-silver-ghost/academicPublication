@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link rel="stylesheet" href="../../style/style.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <header>
         <span class="icon" onclick="toggleMenu()">&#9776;</span>
         <span class="header-title">Analytics</span>
-        <a href="../lecturerStudent/studentDashboard.html" class="icon">&#128100;</a>
+        <a href="../lecturerStudent/lecturerDashboard.html" class="icon">&#128100;</a>
         
     </header>
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px;">
