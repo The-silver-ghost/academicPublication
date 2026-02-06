@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Search</title>
+    <title>Status</title>
     <link rel="stylesheet" href="../../style/style.css">
     <script src="../../scripts/script.js" async></script>
 </head>
 <body>
     <header>
         <span class="icon" onclick="navigateTo('../admin/home.html')">&#8962;</span>
+        <span class="header-title">Status</span>
         <div class="search-container" style="width: 500px;">
             <span style="font-weight: bold;">Search...</span>
             <input type="text">
@@ -39,7 +40,10 @@
                 <p>Author: Sanjeevan</p>
                 <p>2026, Type</p>
             </div>
-            <div class="status-arrow st-rejected">Remove</div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <button class="btn btn-red">X</button>
+                <div class="status-arrow st-approved">Approved</div>
+            </div>
         </div>
 
         <div class="list-item">
@@ -50,7 +54,34 @@
                 <p>Author: Harvind</p>
                 <p>2026, Type</p>
             </div>
-            <div class="status-arrow st-rejected">Remove</div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <button class="btn btn-red">X</button>
+                <div class="status-arrow st-review">Under Review</div>
+            </div>
+        </div>
+        <div class="list-item">
+            <div class="index">3.</div>
+            <div class="front-page-placeholder">FRONT PAGE</div>
+            <div class="item-details">
+                <h3>Test Title 3</h3>
+                <p>Author: Harvind</p>
+                <p>2026, Type</p>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <div class="status-arrow st-removed">Removed</div>
+            </div>
+        </div>
+        <div class="list-item">
+            <div class="index">4.</div>
+            <div class="front-page-placeholder">FRONT PAGE</div>
+            <div class="item-details">
+                <h3>Test Title 4</h3>
+                <p>Author: Harvind</p>
+                <p>2026, Type</p>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <div class="status-arrow st-rejected">Rejected</div>
+            </div>
         </div>
     </div>
 </body>
