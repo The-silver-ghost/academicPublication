@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="../../style/style.css">
+</head>
+<body>
+    <header>
+        <span class="icon" onclick="toggleMenu()">&#9776;</span>
+        <span class="header-title">Analytics</span>
+        <a href="../lecturerStudent/studentDashboard.html" class="icon">&#128100;</a>
+        
+    </header>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px;">
+        <div>
+            <h3>Paper Published</h3>
+            <select class ="filter-btn">
+                <option>Anually</option>
+                <option>Past 5 Years</option>
+            </select>
+            <div class = "chart-container">
+                <div class="bar" style="height: 40%; background: cyan;">2020</div>
+                <div class="bar" style="height: 40%; background: #33aadd;">2021</div>
+                <div class="bar" style="height: 70%; background: #2288cc;">2022</div>
+                <div class="bar" style="height: 90%; background: #1166aa;">2023</div>
+                <div class="bar" style="height: 70%; background: purple;">2024</div>
+            </div>
+        </div>
+
+        <div>
+            <h3>Publication Types</h3>
+            <select class ="filter-btn">
+                <option>All Time</option>
+                <option>Past 5 Years</option>
+            </select>
+            <div class ="pie"></div>
+            <div class = "pie-legend">
+                    <div><span class="legend-colour" style="background: orange;"></span> Book (25%)</div>
+                    <div><span class="legend-colour" style="background: red;"></span> Thesis/Dissertation (15%)</div>
+                    <div><span class="legend-colour" style="background: green;"></span> Conference Paper (25%)</div>
+                    <div><span class="legend-colour" style="background: #2288cc;"></span> Journal/Article (35%)</div>
+            </div>  
+        </div>
+    </div>
+   
+    
+    <script src="../../scripts/script.js"></script>
+</body>
+</html>
+
