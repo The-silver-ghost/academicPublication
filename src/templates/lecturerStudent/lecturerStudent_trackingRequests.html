@@ -1,46 +1,127 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <title>Request Tracking</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <style>
+        .preview-container {
+            width: 100%;
+            height: 350px;
+            background: #f0f0f0;
+            border: 2px dashed #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .preview-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: none; 
+        }
+        
+        .preview-text {
+            color: #888;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
     <header>
-        <a href="{{ url_for('lecturer_student_home') }}" class="icon" style="text-decoration:none; color:inherit;">
-            &#8962;
-        </a>
+        <a href="{{ url_for('lecturer_student_home') }}" class="icon" style="text-decoration:none; color:inherit;">&#8962;</a>
         <span class="header-title">Request Publication Tracking</span>
         <span class="icon">&#128100;</span>
     </header>
 
-    <div style="display: flex; gap: 30px; padding: 40px;">
-        <div style="flex: 1;">
-            <div class="front-page-placeholder" style="width: 100%; height: 350px; background: white; color: black; font-size: 20px;">
-                FRONT PAGE
-            </div>
-            <button class="btn btn-blue" style="width: 100%; margin-top: 10px;">Select Cover Page</button>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div style="padding: 20px; background-color: #d4edda; color: #155724; text-align: center;">
+          {{ messages[0] }}
         </div>
+      {% endif %}
+    {% endwith %}
 
-        <div style="flex: 2;">
-            <h3>Publication Details:</h3>
-            <form method="POST" action=""> 
-                <div class="form-group">
-                    <input type="text" class="form-control" placeholder="Title:">
+    <div style="display: flex; gap: 30px; padding: 40px;">
+        <form method="POST" action="" enctype="multipart/form-data" style="display: contents;">
+            
+            <div style="flex: 1;">
+                <div class="preview-container" id="previewContainer">
+                    <span class="preview-text" id="previewText">FRONT PAGE PREVIEW</span>
+                    <img src="" alt="Cover Preview" class="preview-image" id="coverPreview">
                 </div>
+
+                <label class="btn btn-blue" style="width: 100%; margin-top: 10px; display:block; text-align:center; cursor:pointer;">
+                    Select Cover Page (JPG/PNG)
+                    <input type="file" name="cover_page" accept=".png, .jpg, .jpeg" style="display: none;" onchange="previewImage(this)">
+                </label>
+            </div>
+
+            <div style="flex: 2;">
+                <h3>Publication Details:</h3>
+                
                 <div class="form-group">
-                    <input type="text" class="form-control" placeholder="Author(s):">
+                    <input type="text" name="title" class="form-control" placeholder="Title:" required>
                 </div>
+                
                 <div class="form-group">
-                    <input type="date" class="form-control">
+                    <input type="text" name="authors" class="form-control" placeholder="Author(s) (comma separated):" required>
                 </div>
+                
                 <div class="form-group">
-                    <input type="url" class="form-control" placeholder="URL:">
+                    <input type="text" name="doi" class="form-control" placeholder="DOI (e.g., 10.1145/...)">
                 </div>
+
+                <div class="form-group">
+                    <select name="paper_type" class="form-control" required style="width: 100%; padding: 10px;">
+                        <option value="" disabled selected>Select Paper Type</option>
+                        <option value="Journal">Journal Article</option>
+                        <option value="Conference">Conference Paper</option>
+                        <option value="Book">Book Chapter</option>
+                        <option value="Thesis">Thesis</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <input type="date" name="date_published" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <input type="url" name="url" class="form-control" placeholder="Publication URL:" required>
+                </div>
+                
                 <div style="text-align: right;">
-                    <button class="btn btn-blue" style="width: 150px; padding: 15px;">Publish</button>
+                    <button type="submit" class="btn btn-blue" style="width: 200px; padding: 15px;">Request Tracking</button>
                 </div>
-            </form>
-        </div>
+            </div>
+        </form>
     </div>
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+    <script>
+        function previewImage(input) {
+            const preview = document.getElementById('coverPreview');
+            const placeholder = document.getElementById('previewText');
+            
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    placeholder.style.display = 'none';
+                }
+                
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                preview.src = "";
+                preview.style.display = 'none';
+                placeholder.style.display = 'block';
+            }
+        }
+    </script>
 </body>
 </html>

@@ -7,51 +7,59 @@
 </head>
 <body>
     <header>
-        <a href="{{ url_for('coordinator_home') }}" class="icon" style="text-decoration:none; color:inherit;">
-            &#8962;
-        </a>
-        <span class="header-title">Requests</span>
-        
-        <form action="{{ url_for('coordinator_search_results') }}" method="GET" style="display:flex; align-items:center;">
-            <div class="search-container" style="width: 500px;">
-                <span style="font-weight: bold;">Search...</span>
-                <input type="text" name="query">
-                <button type="submit" style="background:none; border:none; cursor:pointer;">
-                    <span>&#128269;</span>
-                </button>
-            </div>
-        </form>
-        
+        <a href="{{ url_for('coordinator_home') }}" class="icon" style="text-decoration:none; color:inherit;">&#8962;</a>
+        <span class="header-title">Request Publication Tracking</span>
         <span class="icon">&#128100;</span>
     </header>
 
-    <div style="background: #000a20; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
-        <button class="filter-btn" style="margin:0;">Filter ></button>
-        <div class="pagenumber-container">
-            <span>100 Results</span>
-            <span class="divider">|</span>
-            <a href="#" class="page-link active">1</a>
-            <a href="#" class="page-link">2</a>
-            <a href="#" class="page-link">3</a>
-            <a href="#" class="page-link">4</a>
-            <a href="#" class="page-link">Next ></a>
-        </div>
-    </div>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div style="padding: 20px; background-color: #d4edda; color: #155724; text-align: center;">{{ messages[0] }}</div>
+      {% endif %}
+    {% endwith %}
 
-    <div class="list-container">
-        <div class="list-item">
-            <div class="index">1.</div>
-            <div class="front-page-placeholder">FRONT PAGE</div>
-            <div class="item-details">
-                <h3>Test Title 1</h3>
-                <p>Author: Sanjeevan</p>
-                <p>2026, Type</p>
+    <div style="display: flex; gap: 30px; padding: 40px;">
+        <form method="POST" action="" enctype="multipart/form-data" style="display: contents;">
+            <div style="flex: 1;">
+                <div class="front-page-placeholder" style="width: 100%; height: 350px; background: white; color: black; font-size: 20px; display:flex; align-items:center; justify-content:center; border: 1px solid #ccc;">
+                    FRONT PAGE PREVIEW
+                </div>
+                <label class="btn btn-blue" style="width: 100%; margin-top: 10px; display:block; text-align:center; cursor:pointer;">
+                    Select Cover Page
+                    <input type="file" name="cover_page" accept=".png, .jpg, .jpeg" style="display: none;">
+                </label>
             </div>
-            <div style="display: flex; gap: 8px; align-items: center;">
-                <button class="btn btn-red">X</button>
-                <div class="status-arrow st-review">Review</div>
+
+            <div style="flex: 2;">
+                <h3>Publication Details:</h3>
+                <div class="form-group">
+                    <input type="text" name="title" class="form-control" placeholder="Title:" required>
+                </div>
+                <div class="form-group">
+                    <input type="text" name="authors" class="form-control" placeholder="Author(s):" required>
+                </div>
+                <div class="form-group">
+                    <input type="text" name="doi" class="form-control" placeholder="DOI:">
+                </div>
+                <div class="form-group">
+                    <select name="paper_type" class="form-control" required style="width: 100%; padding: 10px;">
+                        <option value="" disabled selected>Select Paper Type</option>
+                        <option value="Journal">Journal Article</option>
+                        <option value="Conference">Conference Paper</option>
+                        <option value="Book">Book Chapter</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <input type="date" name="date_published" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <input type="url" name="url" class="form-control" placeholder="URL:" required>
+                </div>
+                <div style="text-align: right;">
+                    <button type="submit" class="btn btn-blue" style="width: 200px; padding: 15px;">Request Tracking</button>
+                </div>
             </div>
-        </div>
-        </div>
+        </form>
+    </div>
 </body>
 </html>
