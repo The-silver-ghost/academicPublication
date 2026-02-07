@@ -2,82 +2,62 @@
 <html>
 <head>
     <title>Request Tracking</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="{{ url_for('static', filename='script.js') }}"></script>
-    <style>
-        .preview-container {
-            width: 100%;
-            height: 350px;
-            background: #f0f0f0;
-            border: 2px dashed #ccc;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            position: relative;
-        }
-        
-        .preview-image {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            display: none; 
-        }
-        
-        .preview-text {
-            color: #888;
-            font-size: 18px;
-            font-weight: bold;
-        }
-    </style>
-</head>
+    </head>
 <body>
     <header>
-        <a href="{{ url_for('lecturer_student_home') }}" class="icon" style="text-decoration:none; color:inherit;">&#8962;</a>
+        <a href="{{ url_for('lecturer_student_home') }}" class="icon" title="Home"><i class="fas fa-home"></i></a>
         <span class="header-title">Request Publication Tracking</span>
-        <span class="icon">&#128100;</span>
+        <a href="{{ url_for('lecturer_student_dashboard') }}" class="icon" title="Dashboard"><i class="fas fa-chart-pie"></i></a>
     </header>
 
     {% with messages = get_flashed_messages() %}
       {% if messages %}
-        <div style="padding: 20px; background-color: #d4edda; color: #155724; text-align: center;">
-          {{ messages[0] }}
-        </div>
+        <div style="padding: 15px; margin: 20px; background: rgba(16, 185, 129, 0.1); color: #34d399; border: 1px solid #34d399; border-radius: 12px; text-align: center;">{{ messages[0] }}</div>
       {% endif %}
     {% endwith %}
 
-    <div style="display: flex; gap: 30px; padding: 40px;">
+    <div class="dashboard-grid">
         <form method="POST" action="" enctype="multipart/form-data" style="display: contents;">
             
-            <div style="flex: 1;">
+            <div id="left-side">
                 <div class="preview-container" id="previewContainer">
-                    <span class="preview-text" id="previewText">FRONT PAGE PREVIEW</span>
+                    <span class="preview-text" id="previewText">
+                        <i class="fas fa-cloud-upload-alt fa-3x"></i><br>
+                        Preview Cover
+                    </span>
                     <img src="" alt="Cover Preview" class="preview-image" id="coverPreview">
                 </div>
 
-                <label class="btn btn-blue" style="width: 100%; margin-top: 10px; display:block; text-align:center; cursor:pointer;">
-                    Select Cover Page (JPG/PNG)
+                <label class="btn btn-blue" style="width: 100%; margin-top: 15px; display:block; text-align:center; cursor:pointer;">
+                    <i class="fas fa-image"></i> Select Cover
                     <input type="file" name="cover_page" accept=".png, .jpg, .jpeg" style="display: none;" onchange="previewImage(this)">
                 </label>
             </div>
 
-            <div style="flex: 2;">
-                <h3>Publication Details:</h3>
+            <div class="chart-box">
+                <h3 style="color: var(--primary); margin-bottom: 20px;">Publication Details</h3>
                 
                 <div class="form-group">
-                    <input type="text" name="title" class="form-control" placeholder="Title:" required>
+                    <label>Title</label>
+                    <input type="text" name="title" class="form-control" placeholder="Enter title" required>
                 </div>
                 
                 <div class="form-group">
-                    <input type="text" name="authors" class="form-control" placeholder="Author(s) (comma separated):" required>
+                    <label>Authors</label>
+                    <input type="text" name="authors" class="form-control" placeholder="Comma separated names" required>
                 </div>
                 
                 <div class="form-group">
-                    <input type="text" name="doi" class="form-control" placeholder="DOI (e.g., 10.1145/...)">
+                    <label>DOI</label>
+                    <input type="text" name="doi" class="form-control" placeholder="e.g. 10.1145/...">
                 </div>
 
                 <div class="form-group">
-                    <select name="paper_type" class="form-control" required style="width: 100%; padding: 10px;">
+                    <label>Paper Type</label>
+                    <select name="paper_type" class="form-control" required>
                         <option value="" disabled selected>Select Paper Type</option>
                         <option value="Journal">Journal Article</option>
                         <option value="Conference">Conference Paper</option>
@@ -87,15 +67,19 @@
                 </div>
 
                 <div class="form-group">
+                    <label>Date Published</label>
                     <input type="date" name="date_published" class="form-control" required>
                 </div>
                 
                 <div class="form-group">
-                    <input type="url" name="url" class="form-control" placeholder="Publication URL:" required>
+                    <label>Publication URL</label>
+                    <input type="url" name="url" class="form-control" placeholder="https://..." required>
                 </div>
                 
-                <div style="text-align: right;">
-                    <button type="submit" class="btn btn-blue" style="width: 200px; padding: 15px;">Request Tracking</button>
+                <div style="text-align: right; margin-top: 20px;">
+                    <button type="submit" class="btn btn-blue" style="padding: 12px 30px;">
+                        <i class="fas fa-paper-plane"></i> Submit Request
+                    </button>
                 </div>
             </div>
         </form>
@@ -108,18 +92,16 @@
             
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
-                
                 reader.onload = function(e) {
                     preview.src = e.target.result;
                     preview.style.display = 'block';
-                    placeholder.style.display = 'none';
+                    if(placeholder) placeholder.style.display = 'none';
                 }
-                
                 reader.readAsDataURL(input.files[0]);
             } else {
                 preview.src = "";
                 preview.style.display = 'none';
-                placeholder.style.display = 'block';
+                if(placeholder) placeholder.style.display = 'block';
             }
         }
     </script>

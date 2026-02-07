@@ -1,30 +1,37 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <title>Home</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </head>
 <body>
     <header>
-        <span class="icon" onclick="toggleMenu()">&#9776;</span>
-        <a href="{{ url_for('lecturer_student_dashboard') }}" class="icon" style="text-decoration:none; color:inherit;">&#128100;</a>
+        <span class="icon" onclick="toggleMenu()"><i class="fas fa-bars"></i></span>
+        <a href="{{ url_for('lecturer_student_dashboard') }}" class="icon" title="Dashboard">
+            <i class="fas fa-chart-pie"></i>
+        </a>
     </header>
     
-    <div class="login-container" style="justify-content: flex-start; padding-top: 100px;">
-        <h1>Publications</h1>
+    <div class="hero-container">
+        <h1 style="font-size: 3.5rem; margin-bottom: 2rem; background: var(--primary-gradient); background-clip: text; -webkit-background-clip: text; color: transparent; font-weight: 800;">
+            Publications
+        </h1>
         
-        <form action="{{ url_for('lecturer_student_search_results') }}" method="GET" style="display: flex; flex-direction: column; align-items: center;">
-            <div class="search-container" style="width: 500px;">
-                <span style="font-weight: bold;">Search...</span>
-                <input type="text" name="query" placeholder="Enter keywords">
-                <button type="submit" style="background:none; border:none; cursor:pointer;">
-                    <span>&#128269;</span>
+        <form action="{{ url_for('lecturer_student_search_results') }}" method="GET" style="width: 100%; max-width: 600px; display: flex; flex-direction: column; align-items: center; gap: 25px;">
+            
+            <div class="search-container">
+                <input type="text" name="query" placeholder="Search keywords, authors, or titles..." style="font-size: 1.1rem; padding: 15px 25px;">
+                <button type="submit">
+                    <i class="fas fa-search fa-lg"></i>
                 </button>
             </div>
-            <br>
-            <button type="submit" class="btn btn-blue">Search</button>
+            
+            <button type="submit" class="btn btn-blue" style="padding: 12px 50px; font-size: 1.1rem;">
+                Search Database
+            </button>
         </form>
-        
     </div>
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>

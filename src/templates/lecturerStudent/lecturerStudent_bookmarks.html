@@ -14,8 +14,7 @@
 </head>
 <body>
     <header>
-        <a href="{{ url_for('lecturer_student_home') }}" class="icon"
-            style="text-decoration:none; color:inherit;">&#8962;</a>
+        <span class="icon" onclick="toggleMenu()">&#9776;</span>
         <span class="header-title">Bookmarks</span>
 
         <form action="{{ url_for('lecturer_student_bookmarks') }}" method="GET"

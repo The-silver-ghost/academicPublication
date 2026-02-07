@@ -1,84 +1,120 @@
 document.addEventListener("DOMContentLoaded", function() {
-    // 1. Detect the current path to figure out the user role
+    let role = document.body.dataset.role; 
     const path = window.location.pathname;
+
+    if (!role) {
+        if (path.includes('/admin/')) role = 'admin';
+        else if (path.includes('/coordinator/')) role = 'coordinator';
+        else if (path.includes('/academic/')) role = 'academic';
+    }
+
+    if (role === 'student' || role === 'lecturer') role = 'academic';
+
     let menuLinks = '';
     let homeLink = '/';
 
-
-    // ADMIN -------------------------------------------------------
-    if (path.includes('/admin/')) {
+    if (role === 'admin') {
         homeLink = '/admin/home';
         menuLinks = `
-            <a href="/admin/bookmarks">Bookmarks</a>
-            <a href="/admin/requests">Review Requests</a>
-            <a href="/admin/dashboard">Analytics</a>
-            <a href="/admin/requests">Request Tracking</a>
-            <a href="/admin/status">Status</a>
-            <a href="/admin/users">User Management</a>
+            <a href="/admin/bookmarks"><i class="fas fa-bookmark"></i> Bookmarks</a>
+            <a href="/admin/requests"><i class="fas fa-clipboard-list"></i> Tracking Requests</a>
+            <a href="/admin/dashboard"><i class="fas fa-chart-pie"></i> Analytics</a>
+            <a href="/admin/status"><i class="fas fa-tasks"></i> Publication Status</a>
+            <a href="/admin/users"><i class="fas fa-users-cog"></i> User Management</a>
         `;
-    } 
-
-    // COORDINATOR ------------------------------------------------------
-    else if (path.includes('/coordinator/')) {
+    } else if (role === 'coordinator') {
         homeLink = '/coordinator/home';
         menuLinks = `
-            <a href="/coordinator/bookmarks">Bookmarks</a>
-            <a href="/coordinator/requests">Review Requests</a>
-            <a href="/coordinator/dashboard">Analytics</a>
-            <a href="/coordinator/requests">Request Tracking</a>
-            <a href="/coordinator/status">Status</a>
+            <a href="/coordinator/bookmarks"><i class="fas fa-bookmark"></i> Bookmarks</a>
+            <a href="/coordinator/requests"><i class="fas fa-clipboard-list"></i> Tracking Requests</a>
+            <a href="/coordinator/dashboard"><i class="fas fa-chart-pie"></i> Analytics</a>
+            <a href="/coordinator/status"><i class="fas fa-tasks"></i> Publication Status</a>
         `;
-    } 
-
-    // LECTURER/STUDENT ---------------------------------------------------
-    else if (path.includes('/academic/')) {
+    } else if (role === 'academic') { // Lecturer/Student
         homeLink = '/academic/home';
         menuLinks = `
-            <a href="/academic/bookmarks">Bookmarks</a>
-            <a href="/academic/dashboard">Analytics</a>
-            <a href="/academic/requests">Request Tracking</a>
-            <a href="/academic/status">Status</a>
+            <a href="/academic/bookmarks"><i class="fas fa-bookmark"></i> Bookmarks</a>
+            <a href="/academic/dashboard"><i class="fas fa-chart-pie"></i> Analytics</a>
+            <a href="/academic/requests"><i class="fas fa-paper-plane"></i> Request Tracking</a>
+            <a href="/academic/status"><i class="fas fa-tasks"></i> Publication Status</a>
         `;
     }
 
-    const menuHTML = `
-        <div id="overlay" onclick="toggleMenu()"></div>
-        <div id="mySidebar" class="sidebar">
-            <button class="close-btn" onclick="toggleMenu()">&times;</button>
-            <div style="padding: 20px; color: #555; font-size: 12px; font-weight: bold; letter-spacing: 1px;">MENU</div>
-            
-            ${menuLinks}
-            
-            <hr style="border: 0; border-top: 1px solid #eee; margin: 10px 20px;">
-            <a href="${homeLink}">Home</a>
-            
-            <a href="/logout" style="margin-top: 20px; color: #ff6666;">Logout</a>
-        </div>
-    `;
+    if (menuLinks && !document.getElementById('mySidebar')) {
+        const sidebarHTML = `
+            <div id="overlay" onclick="toggleMenu()"></div>
+            <div id="mySidebar" class="sidebar">
+                <button class="close-btn" onclick="toggleMenu()">&times;</button>
+                
+                <div style="padding-top: 1rem;">
+                    <a href="${homeLink}" class="menu-item highlight"><i class="fas fa-home"></i> Home</a>
+                    <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 10px 20px;">
+                </div>
 
-    if (!document.getElementById('mySidebar')) {
-        document.body.insertAdjacentHTML('afterbegin', menuHTML);
+                <div class="menu-links">
+                    ${menuLinks}
+                </div>
+
+                <div class="menu-footer">
+                    <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 10px 20px;">
+                    <a href="/logout" class="menu-item logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('afterbegin', sidebarHTML);
     }
+    
+    document.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', function(e) {
+            const href = this.getAttribute('href');
+            if (href && href.startsWith('/') && !href.startsWith('#') && this.target !== '_blank' && !href.startsWith('javascript')) {
+                e.preventDefault();
+                document.body.style.opacity = 0;
+                setTimeout(() => { window.location.href = href; }, 150);
+            }
+        });
+    });
 });
-
 
 function toggleMenu() {
     const sidebar = document.getElementById("mySidebar");
     const overlay = document.getElementById("overlay");
-    
+    if (!sidebar || !overlay) return;
+
     if (sidebar.classList.contains('active')) {
         sidebar.classList.remove('active');
-        setTimeout(() => { overlay.style.display = "none"; }, 300);
+        overlay.style.opacity = "0";
+        setTimeout(() => { overlay.style.display = "none"; }, 250);
     } else {
         overlay.style.display = "block";
-        setTimeout(() => { sidebar.classList.add('active'); }, 10);
+        void overlay.offsetWidth; 
+        overlay.style.opacity = "1";
+        sidebar.classList.add('active');
     }
 }
 
-function navigateTo(route) {
-    window.location.href = route;
+function toggleFilters() {
+    var menu = document.getElementById("filterMenu");
+    if(!menu) return;
+    if (menu.style.display === "block") {
+        menu.style.opacity = "0";
+        setTimeout(() => { menu.style.display = "none"; }, 150);
+    } else {
+        menu.style.display = "block";
+        setTimeout(() => { menu.style.opacity = "1"; }, 10);
+    }
 }
 
-function goBack() {
-    window.history.back();
+function previewImage(input) {
+    const preview = document.getElementById('coverPreview');
+    const placeholder = document.getElementById('previewText');
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+            if(placeholder) placeholder.style.display = 'none';
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
 }

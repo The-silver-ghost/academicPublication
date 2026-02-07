@@ -2,47 +2,52 @@
 <html>
 <head>
     <title>View Feedback</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="{{ url_for('static', filename='script.js') }}"></script>
-    <style>
-        .review-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; padding: 20px; }
-        .feedback-box { background: #eee; color: #333; padding: 20px; border-radius: 10px; height: 150px; overflow-y: auto; }
-        .preview-image { width: 100%; height: 250px; object-fit: contain; background: #ddd; }
-    </style>
 </head>
-<body>
+<body data-role="{{ session.get('role') }}"> 
     <header>
-        <a href="javascript:history.back()" class="icon" style="text-decoration:none; color:inherit;">&#8962;</a>
+        <span class="icon" onclick="toggleMenu()"><i class="fas fa-bars"></i></span>
         <span class="header-title">Publication Feedback</span>
-        <span class="icon">&#128100;</span>
+        <a href="javascript:history.back()" class="icon"><i class="fas fa-arrow-left"></i></a>
     </header>
 
-    <div class="review-grid">
-        <div style="text-align: center;">
+    <div class="dashboard-grid">
+        <div class="chart-box" style="text-align: center;">
             {% if paper.CoverImage %}
-                <img src="{{ url_for('static', filename='uploads/covers/' + paper.CoverImage) }}" class="preview-image">
+                <img src="{{ url_for('static', filename='uploads/covers/' + paper.CoverImage) }}" class="preview-image" style="width: 100%; height: 350px; object-fit: contain; border-radius: 8px;">
             {% else %}
-                <div class="front-page-placeholder" style="height: 250px;">NO COVER</div>
+                <div class="front-page-placeholder" style="width: 100%; height: 350px;">
+                    <i class="fas fa-file-image fa-3x"></i><br>NO COVER
+                </div>
             {% endif %}
-            <a href="{{ paper.LinkToPaper }}" target="_blank" class="btn btn-blue" style="margin-top: 10px; width: 100%; display:block; text-align:center; text-decoration:none; box-sizing: border-box;">View Publication</a>
+            
+            <a href="{{ paper.LinkToPaper }}" target="_blank" class="btn btn-blue" style="margin-top: 20px; width: 100%;">
+                <i class="fas fa-external-link-alt"></i> View Publication
+            </a>
         </div>
-        <div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+
+        <div class="chart-box">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 20px; align-items: flex-start;">
                 <div>
-                    <h2>Title: {{ paper.PaperTitle }}</h2>
-                    <p>Author(s): {{ paper.Authors }}</p>
-                    <p>Date Published: {{ paper.DatePublished }}</p>
+                    <h2 style="color: var(--primary); margin-bottom: 10px;">{{ paper.PaperTitle }}</h2>
+                    <p style="color: var(--text-muted);"><i class="fas fa-user-edit"></i> {{ paper.Authors }}</p>
+                    <p style="color: var(--text-muted);"><i class="far fa-calendar-alt"></i> {{ paper.DatePublished }}</p>
                 </div>
                 <div>
                     {% if paper.Status == 'Approved' %}
-                        <div class="status-arrow st-approved" style="font-size: 16px; padding: 10px 20px;">Approved &#10004;</div>
+                        <div class="status-arrow st-approved"><i class="fas fa-check-circle"></i> Approved</div>
                     {% elif paper.Status == 'Rejected' %}
-                        <div class="status-arrow st-rejected" style="font-size: 16px; padding: 10px 20px;">Rejected &#10006;</div>
+                        <div class="status-arrow st-rejected"><i class="fas fa-times-circle"></i> Rejected</div>
                     {% endif %}
                 </div>
             </div>
-            <h3>Reviewer Feedback:</h3>
-            <div class="feedback-box">
+            
+            <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
+
+            <h3 style="color: var(--text-white); margin-bottom: 10px;">Reviewer Feedback:</h3>
+            <div class="review-box" style="height: auto; min-height: 150px; color: var(--text-muted);">
                 {% if paper.Feedback %}
                     {{ paper.Feedback }}
                 {% else %}

@@ -1,54 +1,284 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>User Management</title>
-        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-        <script src="{{ url_for('static', filename='script.js') }}"></script>
-    </head>
-    <body>
-        <header>
-            <a href="{{ url_for('admin_home') }}" class="icon" style="text-decoration:none; color:inherit;">
-                &#8962;
-            </a>
+<head>
+    <title>User Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <style>
+        .form-section { display: none; margin-top: 20px;}
+        .form-section.active { display: block; }
+        
+        .mode-btn { 
+            opacity: 0.6; 
+            background: var(--bg-main);
+            border: 1px solid var(--border);
+            width: 48%;
+            justify-content: center;
+        }
+        .mode-btn:hover { opacity: 0.8; }
+        .mode-btn.active { 
+            opacity: 1; 
+            background: var(--primary-gradient); 
+            border-color: transparent;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+        }
+
+        .hidden-field { display: none; }
+        
+        /* Labels inside the cards */
+        label { 
+            color: var(--text-muted); 
+            font-size: 0.85rem; 
+            font-weight: 600; 
+            margin-bottom: 8px; 
+            display: block; 
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <span class="icon" onclick="toggleMenu()" title="Menu">
+            <i class="fas fa-bars"></i>
+        </span>
+        <div style="display:flex; align-items:center; gap:10px;">
             <span class="header-title">User Management</span>
-            <a href="{{ url_for('admin_dashboard') }}" class="icon" style="text-decoration:none; color:inherit;">&#128100;</a>
-        </header>
-        <div id="side-by-side">
-            <div id="left-side">
-                <div id="user-buttons">
-                    <button class="btn btn-blue">New User</button>
-                    <button class="btn btn-blue">Existing User</button>
-                </div>
-                <select name="Faculty" class="drop-down">
-                    <option>FCI</option>
-                    <option>FCM</option>
-                    <option>FOM</option>
-                    <option>FAIE</option>
-                </select>
-                <select name="User Type" class="drop-down">
-                    <option>Admin</option>
-                    <option>Programme Coordinator</option>
-                    <option>Lecturer</option>
-                    <option>Student</option>
-                </select>
+        </div>
+        <a href="{{ url_for('admin_dashboard') }}" class="icon" title="Dashboard">
+            <i class="fas fa-tachometer-alt"></i>
+        </a>
+    </header>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div style="padding: 15px; margin: 20px; background: rgba(16, 185, 129, 0.1); color: #34d399; border: 1px solid #34d399; border-radius: 12px; text-align: center; backdrop-filter: blur(5px);">
+          <i class="fas fa-check-circle"></i> {{ messages[0] }}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <form action="{{ url_for('save_user') }}" method="POST" id="userForm" class="dashboard-grid" style="margin-top: 20px;">
+        <input type="hidden" name="action" id="formAction" value="create">
+        <input type="hidden" name="original_id" id="originalId">
+        <input type="hidden" name="original_role" id="originalRole">
+
+        <div id="left-side">
+            <h3 style="color: var(--primary); margin-bottom: 10px;"><i class="fas fa-sliders-h"></i> Configuration</h3>
+            
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <button type="button" class="btn mode-btn active" onclick="setMode('new')" id="btnNew">
+                    <i class="fas fa-plus"></i> New User
+                </button>
+                <button type="button" class="btn mode-btn" onclick="setMode('existing')" id="btnExist">
+                    <i class="fas fa-edit"></i> Edit User
+                </button>
             </div>
-            <div id="right-side">
-                <div id="search-panel">
-                    <div class="search-container adminSC">
-                        <input type="text" placeholder="Search" value="User ID">
-                    </div>
-                        <div class="search-container adminSC">
-                        <input type="text" placeholder="Search" value="Email">
-                    </div>
-                    <div class="search-container adminSC">
-                        <input type="text" placeholder="Search" value="Password">
-                    </div>
+
+            <hr style="border: 0; border-top: 1px solid var(--border); margin: 10px 0;">
+
+            <div id="searchSection" style="display: none;">
+                <label>Search User ID</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="searchInput" class="form-control" placeholder="e.g. STU-FCI-01">
+                    <button class="btn btn-blue" type="button" onclick="searchUser()" style="padding: 10px 15px;">
+                        <i class="fas fa-search"></i>
+                    </button>
                 </div>
-                <div id="button-panel">
-                    <button class="btn btn-green">Confirm</button>
-                    <button class="btn btn-red-big">Deactivate User</button>
+                <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
+            </div>
+
+            <div>
+                <label>Faculty</label>
+                <div class="search-container" style="max-width: 100%;">
+                    <i class="fas fa-building" style="color: var(--text-muted); margin-right: 10px;"></i>
+                    <select name="faculty" id="facultySelect" style="background: transparent; border: none; color: white; width: 100%; outline: none;">
+                        {% for f in faculties %}
+                            <option style="background: var(--bg-card);" value="{{ f.FacultyID }}">{{ f.FacultyName }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
+            </div>
+
+            <div>
+                <label>User Type</label>
+                <div class="search-container" style="max-width: 100%;">
+                    <i class="fas fa-user-tag" style="color: var(--text-muted); margin-right: 10px;"></i>
+                    <select name="role" id="roleSelect" onchange="updateFields()" style="background: transparent; border: none; color: white; width: 100%; outline: none;">
+                        <option style="background: var(--bg-card);" value="Student">Student</option>
+                        <option style="background: var(--bg-card);" value="Lecturer">Lecturer</option>
+                        <option style="background: var(--bg-card);" value="ProgrammeCoordinator">Coordinator</option>
+                        <option style="background: var(--bg-card);" value="Admin">Admin</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="studentFields" class="hidden-field" style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; margin-top: 10px;">
+                <label>Assigned Lecturer</label>
+                <select name="assigned_lecturer" class="form-control">
+                    <option style="background: var(--bg-card);" value="">-- Select Lecturer --</option>
+                    {% for l in lecturers %}
+                        <option style="background: var(--bg-card);" value="{{ l.LecturerID }}">{{ l.LecturerName }} ({{ l.FacultyID }})</option>
+                    {% endfor %}
+                </select>
+                
+                <label style="display: flex; align-items: center; gap: 10px; margin-top: 15px; cursor: pointer;">
+                    <input type="checkbox" name="is_final_year" value="1" style="width: 18px; height: 18px;">
+                    <span style="color: var(--text-white);">Is Final Year Student?</span>
+                </label>
+            </div>
+
+            <div id="lecturerFields" class="hidden-field" style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; margin-top: 10px;">
+                <label>Assigned Coordinator</label>
+                <select name="assigned_coord" class="form-control">
+                    <option style="background: var(--bg-card);" value="">-- Select Coordinator --</option>
+                    {% for c in coords %}
+                        <option style="background: var(--bg-card);" value="{{ c.CoordinatorID }}">{{ c.CoordinatorName }} ({{ c.FacultyID }})</option>
+                    {% endfor %}
+                </select>
             </div>
         </div>
-    </body>
+
+        <div id="right-side">
+            <h3 style="color: var(--accent); margin-bottom: 10px;"><i class="fas fa-id-card"></i> User Details</h3>
+
+            <div id="displayIdSection" style="display: none; margin-bottom: 15px;">
+                <label>Current ID (Auto-generated)</label>
+                <input type="text" id="visibleId" disabled class="form-control" style="background: rgba(255,255,255,0.1); border-color: transparent; opacity: 0.7;">
+            </div>
+
+            <div>
+                <label>Full Name</label>
+                <div class="search-container" style="max-width: 100%;">
+                    <i class="fas fa-user" style="color: var(--text-muted); margin-right: 10px;"></i>
+                    <input type="text" name="name" id="userName" placeholder="John Doe" required>
+                </div>
+            </div>
+
+            <div>
+                <label>Password</label>
+                <div class="search-container" style="max-width: 100%;">
+                    <i class="fas fa-lock" style="color: var(--text-muted); margin-right: 10px;"></i>
+                    <input type="text" name="password" id="userPass" placeholder="Enter password" required>
+                </div>
+            </div>
+
+            <div style="margin-top: auto; padding-top: 30px; display: flex; flex-direction: column; gap: 15px;">
+                <button type="submit" class="btn btn-green" id="submitBtn" style="width: 100%; justify-content: center;">
+                    <i class="fas fa-check"></i> Create User
+                </button>
+                
+                <button type="button" class="btn btn-red-big" id="deleteBtn" style="display: none; width: 100%; justify-content: center;" onclick="confirmDelete()">
+                    <i class="fas fa-trash-alt"></i> Deactivate User
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <script>
+        function setMode(mode) {
+            // UI Toggle
+            document.getElementById('btnNew').classList.toggle('active', mode === 'new');
+            document.getElementById('btnExist').classList.toggle('active', mode === 'existing');
+            
+            // Logic Toggle
+            const searchSection = document.getElementById('searchSection');
+            const deleteBtn = document.getElementById('deleteBtn');
+            const displayIdSection = document.getElementById('displayIdSection');
+            const submitBtn = document.getElementById('submitBtn');
+            const formAction = document.getElementById('formAction');
+
+            if(mode === 'existing') {
+                searchSection.style.display = 'block';
+                // Use a slight fade in effect
+                searchSection.style.animation = "fadeIn 0.3s ease-out";
+                
+                formAction.value = 'update';
+                submitBtn.innerHTML = '<i class="fas fa-save"></i> Update User';
+                deleteBtn.style.display = 'flex';
+                displayIdSection.style.display = 'block';
+            } else {
+                searchSection.style.display = 'none';
+                formAction.value = 'create';
+                submitBtn.innerHTML = '<i class="fas fa-check"></i> Create User';
+                deleteBtn.style.display = 'none';
+                displayIdSection.style.display = 'none';
+                
+                document.getElementById('userForm').reset();
+                updateFields();
+            }
+        }
+
+        function updateFields() {
+            const role = document.getElementById('roleSelect').value;
+            
+            // Hide all first
+            document.getElementById('studentFields').style.display = 'none';
+            document.getElementById('lecturerFields').style.display = 'none';
+
+            // Show relevant
+            if (role === 'Student') {
+                document.getElementById('studentFields').style.display = 'block';
+                document.getElementById('studentFields').style.animation = "fadeIn 0.3s ease-out";
+            } else if (role === 'Lecturer') {
+                document.getElementById('lecturerFields').style.display = 'block';
+                document.getElementById('lecturerFields').style.animation = "fadeIn 0.3s ease-out";
+            }
+        }
+
+        function searchUser() {
+            const id = document.getElementById('searchInput').value;
+            if(!id) return alert("Please enter an ID");
+
+            // Optional: Add loading state to button
+            const btn = document.querySelector('#searchSection button');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+            fetch('/admin/users/search', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({user_id: id})
+            })
+            .then(response => response.json())
+            .then(resp => {
+                btn.innerHTML = originalText;
+                if(resp.success) {
+                    const data = resp.data;
+                    const role = resp.role; 
+
+                    // Populate Form
+                    document.getElementById('userName').value = data.StudentName || data.LecturerName || data.CoordinatorName || data.AdminName;
+                    document.getElementById('userPass').value = data.StudentPassword || data.LecturerPassword || data.CoordinatorPassword || data.AdminPassword;
+                    document.getElementById('visibleId').value = id;
+                    document.getElementById('originalId').value = id;
+                    document.getElementById('originalRole').value = role;
+
+                    document.getElementById('roleSelect').value = role;
+                    if(data.FacultyID) document.getElementById('facultySelect').value = data.FacultyID;
+                    
+                    updateFields(); 
+
+                    if(role === 'Student') {
+                        document.querySelector('input[name="is_final_year"]').checked = (data.IsFinalYear === 1);
+                        if(data.LecturerID) document.querySelector('select[name="assigned_lecturer"]').value = data.LecturerID;
+                    } else if (role === 'Lecturer') {
+                        if(data.CoordinatorID) document.querySelector('select[name="assigned_coord"]').value = data.CoordinatorID;
+                    }
+                } else {
+                    alert("User not found.");
+                }
+            });
+        }
+
+        function confirmDelete() {
+            if(confirm("Are you sure you want to deactivate this user? This cannot be undone.")) {
+                document.getElementById('formAction').value = 'delete';
+                document.getElementById('userForm').submit();
+            }
+        }
+
+        // Initialize view
+        updateFields();
+    </script>
+</body>
 </html>

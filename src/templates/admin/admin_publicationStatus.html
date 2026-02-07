@@ -1,144 +1,76 @@
 <!DOCTYPE html>
 <html>
-
 <head>
     <title>Publication Status</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="{{ url_for('static', filename='script.js') }}"></script>
     <style>
-        .filter-menu {
-            display: none;
-            position: absolute;
-            background: #000a20;
-            border: 1px solid #444;
-            padding: 15px;
-            z-index: 100;
-            margin-top: 10px;
-            min-width: 200px;
-        }
-
-        .filter-group {
-            margin-bottom: 10px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .filter-group label {
-            color: white;
-            font-size: 12px;
-            margin-bottom: 5px;
-        }
-
-        .filter-group select,
-        .filter-group input {
-            padding: 5px;
-            color: black;
-        }
+        .filter-menu { display: none; position: absolute; background: var(--bg-card); border: 1px solid var(--border); padding: 20px; z-index: 100; margin-top: 10px; min-width: 250px; border-radius: var(--radius); box-shadow: var(--shadow); }
     </style>
-    <script>
-        function toggleFilters() {
-            var menu = document.getElementById("filterMenu");
-            menu.style.display = (menu.style.display === "block") ? "none" : "block";
-        }
-    </script>
 </head>
-
 <body>
     <header>
-        <a href="{{ url_for('admin_home') }}" class="icon" style="text-decoration:none; color:inherit;">&#8962;</a>
+        <span class="icon" onclick="toggleMenu()"><i class="fas fa-bars"></i></span>
         <span class="header-title">Publication Status</span>
         <form action="{{ url_for('admin_status') }}" method="GET" style="display:flex; align-items:center;">
             <div class="search-container" style="width: 500px;">
-                <input type="text" name="query" placeholder="Search Title or Author..."
-                    value="{{ request.args.get('query', '') }}">
+                <input type="text" name="query" placeholder="Search Title or Author..." value="{{ request.args.get('query', '') }}">
                 <input type="hidden" name="filter_type" value="{{ request.args.get('filter_type', '') }}">
                 <input type="hidden" name="filter_status" value="{{ request.args.get('filter_status', '') }}">
                 <input type="hidden" name="filter_year" value="{{ request.args.get('filter_year', '') }}">
-                <button type="submit"
-                    style="background:none; border:none; cursor:pointer;"><span>&#128269;</span></button>
+                <button type="submit"><i class="fas fa-search"></i></button>
             </div>
         </form>
-        <a href="{{ url_for('admin_dashboard') }}" class="icon"
-            style="text-decoration:none; color:inherit;">&#128100;</a>
+        <a href="{{ url_for('admin_dashboard') }}" class="icon"><i class="fas fa-tachometer-alt"></i></a>
     </header>
 
-    <div
-        style="background: #000a20; padding: 10px; display: flex; justify-content: space-between; align-items: center; position: relative;">
-        <div>
-            <button class="filter-btn" onclick="toggleFilters()" style="margin:0;">Filter ></button>
+    <div class="toolbar">
+        <div style="position: relative;">
+            <button class="filter-btn" onclick="toggleFilters()"><i class="fas fa-filter"></i> Filters</button>
             <form action="{{ url_for('admin_status') }}" method="GET" class="filter-menu" id="filterMenu">
                 <input type="hidden" name="query" value="{{ request.args.get('query', '') }}">
-                <div class="filter-group"><label>Paper Type</label><select name="filter_type">
-                        <option value="">All Types</option>
-                        <option value="Journal" {% if request.args.get('filter_type')=='Journal' %}selected{% endif %}>
-                            Journal</option>
-                        <option value="Conference" {% if request.args.get('filter_type')=='Conference' %}selected{%
-                            endif %}>Conference</option>
-                        <option value="Book" {% if request.args.get('filter_type')=='Book' %}selected{% endif %}>Book
-                        </option>
-                    </select></div>
-                <div class="filter-group"><label>Status</label><select name="filter_status">
-                        <option value="">All Statuses</option>
-                        <option value="Approved" {% if request.args.get('filter_status')=='Approved' %}selected{% endif
-                            %}>Approved</option>
-                        <option value="Rejected" {% if request.args.get('filter_status')=='Rejected' %}selected{% endif
-                            %}>Rejected</option>
-                        <option value="Under Review" {% if request.args.get('filter_status')=='Under Review'
-                            %}selected{% endif %}>Under Review</option>
-                    </select></div>
-                <div class="filter-group"><label>Year</label><input type="number" name="filter_year" placeholder="2026"
-                        value="{{ request.args.get('filter_year', '') }}"></div>
-                <button type="submit" class="btn btn-blue" style="width:100%; font-size:12px; padding:5px;">Apply
-                    Filters</button>
+                <div class="filter-group"><label>Paper Type</label><select name="filter_type" class="form-control"><option value="">All Types</option><option value="Journal" {% if request.args.get('filter_type')=='Journal' %}selected{% endif %}>Journal</option><option value="Conference" {% if request.args.get('filter_type')=='Conference' %}selected{% endif %}>Conference</option><option value="Book" {% if request.args.get('filter_type')=='Book' %}selected{% endif %}>Book</option></select></div>
+                <div class="filter-group"><label>Status</label><select name="filter_status" class="form-control"><option value="">All Statuses</option><option value="Approved" {% if request.args.get('filter_status')=='Approved' %}selected{% endif %}>Approved</option><option value="Rejected" {% if request.args.get('filter_status')=='Rejected' %}selected{% endif %}>Rejected</option><option value="Under Review" {% if request.args.get('filter_status')=='Under Review' %}selected{% endif %}>Under Review</option></select></div>
+                <div class="filter-group"><label>Year</label><input type="number" name="filter_year" class="form-control" placeholder="YYYY" value="{{ request.args.get('filter_year', '') }}"></div>
+                <button type="submit" class="btn btn-blue" style="width:100%;">Apply</button>
             </form>
         </div>
         <div class="pagenumber-container">
-            <span>{{ total }} Results</span> <span class="divider">|</span>
-            {% if current_page > 1 %}<a
-                href="{{ url_for('admin_status', page=current_page-1, query=request.args.get('query'), filter_type=request.args.get('filter_type'), filter_status=request.args.get('filter_status'), filter_year=request.args.get('filter_year')) }}"
-                class="page-link">&lt; Prev</a>{% endif %}
-            {% for p in range(1, pages + 1) %}<a
-                href="{{ url_for('admin_status', page=p, query=request.args.get('query'), filter_type=request.args.get('filter_type'), filter_status=request.args.get('filter_status'), filter_year=request.args.get('filter_year')) }}"
-                class="page-link {% if p == current_page %}active{% endif %}">{{ p }}</a>{% endfor %}
-            {% if current_page < pages %}<a
-                href="{{ url_for('admin_status', page=current_page+1, query=request.args.get('query'), filter_type=request.args.get('filter_type'), filter_status=request.args.get('filter_status'), filter_year=request.args.get('filter_year')) }}"
-                class="page-link">Next &gt;</a>{% endif %}
+            <span>{{ total }} Results</span> <span style="margin: 0 10px; color: var(--border);">|</span>
+            {% if current_page > 1 %}<a href="{{ url_for('admin_status', page=current_page-1, query=request.args.get('query'), filter_type=request.args.get('filter_type'), filter_status=request.args.get('filter_status'), filter_year=request.args.get('filter_year')) }}" class="page-link"><i class="fas fa-chevron-left"></i></a>{% endif %}
+            {% for p in range(1, pages + 1) %}<a href="{{ url_for('admin_status', page=p, query=request.args.get('query'), filter_type=request.args.get('filter_type'), filter_status=request.args.get('filter_status'), filter_year=request.args.get('filter_year')) }}" class="page-link {% if p == current_page %}active{% endif %}">{{ p }}</a>{% endfor %}
+            {% if current_page < pages %}<a href="{{ url_for('admin_status', page=current_page+1, query=request.args.get('query'), filter_type=request.args.get('filter_type'), filter_status=request.args.get('filter_status'), filter_year=request.args.get('filter_year')) }}" class="page-link"><i class="fas fa-chevron-right"></i></a>{% endif %}
         </div>
     </div>
 
     <div class="list-container">
         {% for paper in papers %}
         <div class="list-item">
-            <div class="index">{{ (current_page - 1) * 10 + loop.index }}.</div>
-            {% if paper.CoverImage %}<img src="{{ url_for('static', filename='uploads/covers/' + paper.CoverImage) }}"
-                class="front-page-placeholder" style="object-fit: cover;">{% else %}<div class="front-page-placeholder">
-                FRONT PAGE</div>{% endif %}
-            <div class="item-details">
+            <div class="index">{{ (current_page - 1) * 10 + loop.index }}</div>
+            {% if paper.CoverImage %}<img src="{{ url_for('static', filename='uploads/covers/' + paper.CoverImage) }}" style="width: 80px; height: 110px; object-fit: cover; border-radius: 6px;">{% else %}<div class="front-page-placeholder" style="width: 80px; height: 110px;"><i class="fas fa-file-alt fa-2x"></i></div>{% endif %}
+            <div class="item-details" style="flex: 1;">
                 <h3>{{ paper.PaperTitle }}</h3>
-                <p>Authors: {{ paper.Authors }}</p>
-                <p>{{ paper.DatePublished }}, {{ paper.PaperType }}</p>
+                <p><i class="fas fa-user-edit"></i> {{ paper.Authors }}</p>
+                <p><i class="far fa-calendar-alt"></i> {{ paper.DatePublished }} &bull; {{ paper.PaperType }}</p>
             </div>
+            
             <div style="display: flex; gap: 8px; align-items: center;">
                 {% if paper.Status == 'Approved' %}
-                <a href="{{ url_for('view_feedback_detail') }}?id={{ paper.PaperID }}" class="btn btn-blue"
-                    style="padding: 5px 10px; font-size:12px; text-decoration:none; background-color: #555;">View
-                    Feedback</a>
-                <div class="status-arrow st-approved">Approved</div>
+                    <a href="{{ url_for('view_feedback_detail') }}?id={{ paper.PaperID }}" class="btn" style="background: var(--bg-main); border: 1px solid var(--border); font-size: 0.8rem;">Feedback</a>
+                    <div class="status-arrow st-approved"><i class="fas fa-check"></i> Approved</div>
                 {% elif paper.Status == 'Rejected' %}
-                <a href="{{ url_for('view_feedback_detail') }}?id={{ paper.PaperID }}" class="btn btn-blue"
-                    style="padding: 5px 10px; font-size:12px; text-decoration:none; background-color: #555;">View
-                    Feedback</a>
-                <div class="status-arrow st-rejected">Rejected</div>
+                    <a href="{{ url_for('view_feedback_detail') }}?id={{ paper.PaperID }}" class="btn" style="background: var(--bg-main); border: 1px solid var(--border); font-size: 0.8rem;">Feedback</a>
+                    <div class="status-arrow st-rejected"><i class="fas fa-times"></i> Rejected</div>
                 {% elif paper.Status == 'Removed' %}
-                <div class="status-arrow st-removed">Removed</div>
+                    <div class="status-arrow st-removed"><i class="fas fa-trash"></i> Removed</div>
                 {% else %}
-                <a href="{{ url_for('admin_review_detail') }}?id={{ paper.PaperID }}" class="btn btn-blue"
-                    style="text-decoration: none; padding: 5px 15px; font-size: 14px; background-color: #007bff;">Review</a>
-                <div class="status-arrow st-review">Under Review</div>
+                    <a href="{{ url_for('admin_review_detail') }}?id={{ paper.PaperID }}" class="btn btn-blue" style="padding: 6px 15px; font-size: 0.9rem;">Review</a>
+                    <div class="status-arrow st-review"><i class="fas fa-clock"></i> Review</div>
                 {% endif %}
             </div>
         </div>
-        {% else %}<div style="padding: 20px; text-align: center; color: white;">No papers found.</div>{% endfor %}
+        {% else %}<div style="text-align: center; padding: 4rem; color: var(--text-muted);"><p>No papers found.</p></div>{% endfor %}
     </div>
 </body>
 </html>
