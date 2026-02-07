@@ -1,24 +1,28 @@
 <!DOCTYPE html>
 <html>
-
 <head>
     <title>Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </head>
-
 <body>
     <header>
-        <span class="icon" onclick="navigateTo('../mainScreens/home.html')">&#8962;</span>
+        <a href="{{ url_for('admin_home') }}" class="icon" style="text-decoration: none; color: inherit;">&#8962;</a>
         <span class="header-title">Analytics</span>
         <div style="display: flex; gap: 10px;">
             <button class="btn" id="adminDashBtn" style="background: #7a0f5a;">Faculty</button>
         </div>
-        <div class="search-container" style="width: 500px;">
-            <span style="font-weight: bold;">Search...</span>
-            <input type="text">
-            <span>&#128269;</span>
-        </div>
+        
+        <form action="{{ url_for('admin_search_results') }}" method="GET" style="display:flex; align-items:center;">
+            <div class="search-container" style="width: 500px;">
+                <span style="font-weight: bold;">Search...</span>
+                <input type="text" name="query">
+                <button type="submit" style="background:none; border:none; cursor:pointer;">
+                    <span>&#128269;</span>
+                </button>
+            </div>
+        </form>
+        
         <span class="icon">&#128100;</span>
     </header>
 
@@ -37,8 +41,7 @@
 
         <div>
             <h3>Publication Types</h3>
-            <div
-                style="width: 150px; height: 150px; border-radius: 50%; background: conic-gradient(orange 0% 25%, red 25% 40%, green 40% 65%, #2288cc 65% 100%); margin: 0 auto;">
+            <div style="width: 150px; height: 150px; border-radius: 50%; background: conic-gradient(orange 0% 25%, red 25% 40%, green 40% 65%, #2288cc 65% 100%); margin: 0 auto;">
             </div>
 
             <h3>Author Productivity</h3>
@@ -51,5 +54,4 @@
         </div>
     </div>
 </body>
-
 </html>

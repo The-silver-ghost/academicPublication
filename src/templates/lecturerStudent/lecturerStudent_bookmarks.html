@@ -5,12 +5,21 @@
 </head>
 <body>
     <header>
-        <span class="icon" onclick="navigateTo('../mainScreens/home.html')">&#8962;</span>
+        <a href="{{ url_for('lecturer_student_home') }}" class="icon" style="text-decoration: none; color: inherit;">
+            &#8962;
+        </a>
+
         <span class="header-title">Bookmarks</span>
-        <div class="search-container" style="width: 200px;">
-            <input type="text" placeholder="Search">
-            <span>&#128269;</span>
-        </div>
+
+        <form action="{{ url_for('lecturer_student_search_results') }}" method="GET" style="display:flex; align-items:center;">
+            <div class="search-container" style="width: 200px;">
+                <input type="text" name="query" placeholder="Search">
+                <button type="submit" style="background:none; border:none; cursor:pointer;">
+                    <span>&#128269;</span>
+                </button>
+            </div>
+        </form>
+
         <span class="icon">&#128100;</span>
     </header>
 
@@ -25,6 +34,7 @@
             <a href="#" class="page-link">Next ></a>
         </div>
     </div>
+    
     <div class="list-container">
         <div class="list-item">
             <div class="index">1.</div>
@@ -37,6 +47,7 @@
             <div class="icon-bookmark filled" title="Unsave"></div>
         </div>
     </div>
-    <script src="../../scripts/script.js"></script>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>

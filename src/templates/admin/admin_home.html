@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='adminScript.js') }}"></script>
+</head>
+<body>
+    <header>
+        <span class="icon" onclick="toggleMenu()">&#9776;</span>
+        <a href="{{ url_for('admin_dashboard') }}" class="icon" style="text-decoration:none; color:inherit;">&#128100;</a>
+    </header>
+    <div class="login-container" style="justify-content: flex-start; padding-top: 100px;">
+        <h1>Publications</h1>
+        <form action="{{ url_for('admin_search_results') }}" method="GET"
+            style="display: flex; flex-direction: column; align-items: center;">
+            <div class="search-container" style="width: 500px;">
+                <span style="font-weight: bold;">Search...</span>
+                <input type="text" name="query" placeholder="Enter keywords...">
+                <button type="submit" style="border: none; background: transparent; cursor: pointer;">
+                    <span>&#128269;</span>
+                </button>
+            </div>
+            <br>
+            <button type="submit" class="btn btn-blue">Search</button>
+        </form>
+    </div>
+</body>
+</html>

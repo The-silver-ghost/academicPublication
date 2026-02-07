@@ -1,18 +1,27 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Search</title>
+    <title>Status</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </head>
 <body>
     <header>
-        <span class="icon" onclick="navigateTo('../admin/home.html')">&#8962;</span>
-        <div class="search-container" style="width: 500px;">
-            <span style="font-weight: bold;">Search...</span>
-            <input type="text">
-            <span>&#128269;</span>
-        </div>
+        <a href="{{ url_for('lecturer_student_home') }}" class="icon" style="text-decoration:none; color:inherit;">
+            &#8962;
+        </a>
+        <span class="header-title">Status</span>
+        
+        <form action="{{ url_for('lecturer_student_search_results') }}" method="GET" style="display:flex; align-items:center;">
+            <div class="search-container" style="width: 500px;">
+                <span style="font-weight: bold;">Search...</span>
+                <input type="text" name="query">
+                <button type="submit" style="background:none; border:none; cursor:pointer;">
+                    <span>&#128269;</span>
+                </button>
+            </div>
+        </form>
+        
         <span class="icon">&#128100;</span>
     </header>
 
@@ -39,19 +48,11 @@
                 <p>Author: Sanjeevan</p>
                 <p>2026, Type</p>
             </div>
-            <div class="status-arrow st-rejected">Remove</div>
-        </div>
-
-        <div class="list-item">
-            <div class="index">2.</div>
-            <div class="front-page-placeholder">FRONT PAGE</div>
-            <div class="item-details">
-                <h3>Test Title 2</h3>
-                <p>Author: Harvind</p>
-                <p>2026, Type</p>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <button class="btn btn-red">X</button>
+                <div class="status-arrow st-approved">Approved</div>
             </div>
-            <div class="status-arrow st-rejected">Remove</div>
         </div>
-    </div>
+        </div>
 </body>
 </html>

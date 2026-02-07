@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <a href="{{ url_for('coordinator_home') }}" class="icon" style="text-decoration:none; color:inherit;">
+            &#8962;
+        </a>
+        
+        <form action="{{ url_for('coordinator_search_results') }}" method="GET" style="display:flex; align-items:center;">
+            <div class="search-container">
+                <input type="text" name="query" placeholder="Search" value="Science">
+                <button type="submit" style="background:none; border:none; cursor:pointer;">
+                    <span>&#128269;</span>
+                </button>
+            </div>
+        </form>
+        
+        <span class="icon">&#128100;</span>
+    </header>
+
+    <div style="background: #000a20; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
+        <button class="filter-btn" style="margin:0;">Filter ></button>
+        
+        <div class="pagenumber-container">
+            <span>100 Results</span>
+            <span class="divider">|</span>
+            <a href="#" class="page-link active">1</a>
+            <a href="#" class="page-link">2</a>
+            <a href="#" class="page-link">3</a>
+            <a href="#" class="page-link">4</a>
+            <a href="#" class="page-link">Next ></a>
+        </div>
+    </div>
+
+    <div class="list-container">
+        <div class="list-item">
+            <div class="index">1.</div>
+            <div class="front-page-placeholder">FRONT PAGE</div>
+            <div class="item-details">
+                <h3>Test Title 1</h3>
+                <p>Author: Sanjeevan</p>
+                <p>2026, Type</p>
+            </div>
+            <div class="icon-bookmark" title="Save this item"></div>
+        </div>
+        <div class="list-item">
+            <div class="index">2.</div>
+            <div class="front-page-placeholder">FRONT PAGE</div>
+            <div class="item-details">
+                <h3>Test Title 2</h3>
+                <p>Author: Harvind</p>
+                <p>2026, Type</p>
+            </div>
+            <div class="icon-bookmark" title="Save this item"></div>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

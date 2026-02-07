@@ -100,7 +100,10 @@ def populate_db():
         "Mr. James", "Dr. Brenda", "Dr. Hisham"
     ]
 
-    coord_names = ["Prof. Siva", "Dr. Lee", "Ms. Salmah", "Mr. Johnson", "Dr. Faizal"]
+    coord_names = [
+        "Prof. Siva", "Dr. Lee", "Ms. Salmah", "Mr. Johnson", "Dr. Faizal",
+        "Dr. Aminah", "Mr. Wong", "Ms. Devi", "Prof. Tan", "Dr. Gomez"
+    ]
     
     admin_names = ["Admin Rose", "Admin Kamal", "Admin Susan", "Admin Raj", "Admin Hafiz"]
 
@@ -119,31 +122,40 @@ def populate_db():
 
     for code, name in faculties:
         cursor.execute("INSERT OR IGNORE INTO Faculty (FacultyID, FacultyName) VALUES (?, ?)", (code, name))
-        
+
         admin_name = admin_names[admin_idx]
         admin_id = f"ADM-{code}-01"
         cursor.execute("INSERT OR IGNORE INTO Admin (AdminID, AdminPassword, AdminName) VALUES (?, ?, ?)", 
                        (admin_id, "admin123", admin_name))
         admin_idx += 1
 
-        coord_name = coord_names[coord_idx]
-        coord_id = f"COO-{code}-01"
-        cursor.execute("INSERT OR IGNORE INTO ProgrammeCoordinator (CoordinatorID, CoordinatorPassword, CoordinatorName, FacultyID, AdminID) VALUES (?, ?, ?, ?, ?)", 
-                       (coord_id, "coord123", coord_name, code, admin_id))
-        coord_idx += 1
+        current_faculty_coords = []
+        for c_num in range(1, 3): # Loops 1 to 2
+            coord_name = coord_names[coord_idx]
+            coord_id = f"COO-{code}-0{c_num}"
+            
+            cursor.execute("INSERT OR IGNORE INTO ProgrammeCoordinator (CoordinatorID, CoordinatorPassword, CoordinatorName, FacultyID, AdminID) VALUES (?, ?, ?, ?, ?)", 
+                           (coord_id, "coord123", coord_name, code, admin_id))
+            
+            current_faculty_coords.append(coord_id)
+            coord_idx += 1
 
         lecturer_ids = []
         for i in range(1, 4):
             lec_name = lecturer_names[lec_idx]
             lec_id = f"LEC-{code}-0{i}"
             lecturer_ids.append(lec_id)
+
+            assigned_coord = current_faculty_coords[(i - 1) % 2] 
+
             cursor.execute("INSERT OR IGNORE INTO Lecturer (LecturerID, LecturerPassword, LecturerName, CoordinatorID, AdminID, FacultyID) VALUES (?, ?, ?, ?, ?, ?)", 
-                           (lec_id, "lec123", lec_name, coord_id, admin_id, code))
+                           (lec_id, "lec123", lec_name, assigned_coord, admin_id, code))
             lec_idx += 1
 
         for i in range(1, 6):
             student_name = student_names[stu_idx]
             stu_id = f"STU-{code}-0{i}"
+
             assigned_lecturer = lecturer_ids[(i - 1) % 3]
             is_final = 1 if i == 5 else 0
             
