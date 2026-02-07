@@ -6,9 +6,11 @@ from werkzeug.utils import secure_filename
 from database import init_db, populate_db
 from math import ceil
 from datetime import datetime
+import json
+from collections import Counter
 
 app = Flask(__name__)
-app.secret_key = 'super_secret_key_change_this'
+app.secret_key = '2002200520092005'
 DB_NAME = 'trackingsystem.db'
 UPLOAD_FOLDER = 'static/uploads/covers'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
@@ -33,9 +35,7 @@ def get_public_search_results(user_id, page=1, per_page=10):
     search_query = request.args.get('query', '').strip()
     filter_type = request.args.get('filter_type', '')
     filter_year = request.args.get('filter_year', '')
-    
-    # Base Query: Only show APPROVED papers for general search
-    # Also check if the current user has bookmarked each paper
+
     sql = '''
         SELECT p.*, 
         CASE WHEN b.PaperID IS NOT NULL THEN 1 ELSE 0 END as IsBookmarked
@@ -72,6 +72,79 @@ def get_public_search_results(user_id, page=1, per_page=10):
     conn.close()
     
     return papers, total_count, total_pages, page
+
+def get_analytics_data(user_role, user_id=None, faculty_id=None, year_filter=None):
+    conn = get_db_connection()
+    papers = []
+
+    if user_role == 'admin':
+        if faculty_id:
+             papers = conn.execute('''
+                SELECT p.* FROM Paper p
+                LEFT JOIN Lecturer l ON p.LecturerID = l.LecturerID
+                LEFT JOIN Student s ON p.StudentID = s.StudentID
+                WHERE p.Status = 'Approved' AND (l.FacultyID = ? OR s.FacultyID = ?)
+             ''', (faculty_id, faculty_id)).fetchall()
+        else:
+             papers = conn.execute("SELECT * FROM Paper WHERE Status = 'Approved'").fetchall()
+
+    elif user_role == 'coordinator':
+        if faculty_id == 'personal':
+             papers = conn.execute("SELECT * FROM Paper WHERE Status = 'Approved' AND CoordinatorID = ?", (user_id,)).fetchall()
+        else:
+             coord = conn.execute("SELECT FacultyID FROM ProgrammeCoordinator WHERE CoordinatorID = ?", (user_id,)).fetchone()
+             f_id = coord['FacultyID']
+             papers = conn.execute('''
+                SELECT DISTINCT p.* FROM Paper p
+                LEFT JOIN Lecturer l ON p.LecturerID = l.LecturerID
+                LEFT JOIN Student s ON p.StudentID = s.StudentID
+                LEFT JOIN ProgrammeCoordinator c ON p.CoordinatorID = c.CoordinatorID
+                WHERE p.Status = 'Approved' AND (l.FacultyID = ? OR s.FacultyID = ? OR c.FacultyID = ?)
+             ''', (f_id, f_id, f_id)).fetchall()
+
+    elif user_role == 'academic':
+        papers = conn.execute("SELECT * FROM Paper WHERE Status = 'Approved' AND (LecturerID = ? OR StudentID = ?)", (user_id, user_id)).fetchall()
+
+    conn.close()
+
+    annual_counts = {}
+    type_counts = {}
+    author_counts = Counter()
+
+    for p in papers:
+        year = p['DatePublished'][:4]
+        
+        if year_filter and year_filter != 'All' and year != str(year_filter):
+            continue
+
+        annual_counts[year] = annual_counts.get(year, 0) + 1
+        
+        p_type = p['PaperType']
+        type_counts[p_type] = type_counts.get(p_type, 0) + 1
+        
+        if p['Authors']:
+            authors = [a.strip() for a in p['Authors'].split(',')]
+            for a in authors:
+                author_counts[a] += 1
+
+    sorted_years = sorted(annual_counts.keys())
+    chart_annual = {
+        'labels': sorted_years,
+        'data': [annual_counts[y] for y in sorted_years]
+    }
+    
+    chart_types = {
+        'labels': list(type_counts.keys()),
+        'data': list(type_counts.values())
+    }
+    
+    top_5 = author_counts.most_common(5)
+    chart_authors = {
+        'labels': [x[0] for x in top_5],
+        'data': [x[1] for x in top_5]
+    }
+
+    return chart_annual, chart_types, chart_authors
 
 def get_filtered_papers(base_query, query_params, page=1, per_page=10):
     search_query = request.args.get('query', '').strip()
@@ -111,6 +184,20 @@ def get_filtered_papers(base_query, query_params, page=1, per_page=10):
     conn.close()
     
     return papers, total_count, total_pages, page
+
+def get_all_years():
+    conn = get_db_connection()
+    query = "SELECT DISTINCT substr(DatePublished, 1, 4) as year FROM Paper ORDER BY year DESC"
+    years_data = conn.execute(query).fetchall()
+    conn.close()
+    
+    years = [row['year'] for row in years_data if row['year']]
+    
+    if not years:
+        from datetime import datetime
+        years = [str(datetime.now().year)]
+        
+    return years
 
 def validate_authors_and_get_ids(authors_text):
     if not authors_text:
@@ -385,7 +472,15 @@ def admin_home():
 
 @app.route('/admin/dashboard')
 def admin_dashboard():
-    return render_template('admin/admin_dashboard.html')
+    year_filter = request.args.get('year', 'All') 
+    
+    annual, types, authors = get_analytics_data('admin', year_filter=year_filter)
+    
+    all_years = get_all_years()
+    
+    return render_template('admin/admin_dashboard.html', 
+                           annual=annual, types=types, authors=authors, 
+                           year_filter=year_filter, years=all_years)
 
 @app.route('/admin/bookmarks')
 def admin_bookmarks():
@@ -440,7 +535,19 @@ def coordinator_home():
 
 @app.route('/coordinator/dashboard')
 def coordinator_dashboard():
-    return render_template('coordinator/coordinator_dashboard.html')
+    mode = request.args.get('mode', 'faculty')
+    year_filter = request.args.get('year', 'All')
+    user_id = session.get('user_id')
+    
+    faculty_arg = 'personal' if mode == 'personal' else None
+    
+    annual, types, authors = get_analytics_data('coordinator', user_id, faculty_id=faculty_arg, year_filter=year_filter)
+    
+    all_years = get_all_years()
+    
+    return render_template('coordinator/coordinator_dashboard.html', 
+                           annual=annual, types=types, authors=authors, mode=mode, 
+                           year_filter=year_filter, years=all_years) 
 
 @app.route('/coordinator/bookmarks')
 def coordinator_bookmarks():
@@ -504,7 +611,16 @@ def lecturer_student_home():
 
 @app.route('/academic/dashboard')
 def lecturer_student_dashboard():
-    return render_template('lecturerStudent/lecturerStudent_dashboard.html')
+    year_filter = request.args.get('year', 'All')
+    user_id = session.get('user_id')
+    
+    annual, types, _ = get_analytics_data('academic', user_id, year_filter=year_filter)
+    
+    all_years = get_all_years()
+    
+    return render_template('lecturerStudent/lecturerStudent_dashboard.html', 
+                           annual=annual, types=types, 
+                           year_filter=year_filter, years=all_years) # Passed 'years'
 
 @app.route('/academic/bookmarks')
 def lecturer_student_bookmarks():

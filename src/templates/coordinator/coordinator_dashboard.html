@@ -1,47 +1,98 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <title>Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <style>
+        .chart-box { background: #000a20; padding: 20px; border-radius: 10px; border: 1px solid #333; }
+        .filter-select { padding: 5px; background: #333; color: white; border: none; border-radius: 4px; }
+        .toggle-btn { opacity: 0.5; }
+        .toggle-btn.active { opacity: 1; border: 2px solid white; }
+    </style>
 </head>
 <body>
     <header>
-        <a href="{{ url_for('coordinator_home') }}" class="icon" style="text-decoration:none; color:inherit;">
-            &#8962;
-        </a>
+        <span class="icon" onclick="toggleMenu()">&#9776;</span>
         <span class="header-title">Analytics</span>
+        
         <div style="display: flex; gap: 10px;">
-            <button class="btn" style="background: #7a0f5a;">Faculty</button>
-            <button class="btn" style="background: #a34878;">Personal</button>
+            <a href="{{ url_for('coordinator_dashboard', mode='faculty') }}" class="btn toggle-btn {% if mode == 'faculty' %}active{% endif %}" style="background: #7a0f5a; text-decoration:none;">Faculty</a>
+            <a href="{{ url_for('coordinator_dashboard', mode='personal') }}" class="btn toggle-btn {% if mode == 'personal' %}active{% endif %}" style="background: #a34878; text-decoration:none;">Personal</a>
         </div>
+        
         <span class="icon">&#128100;</span>
     </header>
 
+    <div style="padding: 20px; display:flex; gap:10px; align-items:center; background:#000a20;">
+        <label style="color:white;">Filter Year:</label>
+        <form action="{{ url_for('coordinator_dashboard') }}" method="GET">
+            <input type="hidden" name="mode" value="{{ mode }}">
+            <select name="year" class="filter-select" onchange="this.form.submit()">
+                <option value="All">All Time</option>
+                {% for y in years %}
+                    <option value="{{ y }}" {% if year_filter == y %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px;">
-        <div>
+        <div class="chart-box">
             <h3>Papers Published Annually</h3>
-            <div class="chart-container">
-                <div class="bar" style="height: 40%; background: cyan;">2020</div>
-                <div class="bar" style="height: 40%; background: #33aadd;">2021</div>
-                <div class="bar" style="height: 70%; background: #2288cc;">2022</div>
-                <div class="bar" style="height: 90%; background: #1166aa;">2023</div>
-                <div class="bar" style="height: 70%; background: purple;">2024</div>
-            </div>
-            <button class="btn btn-blue" style="margin-top: 20px;">Generate Report</button>
+            <canvas id="annualChart"></canvas>
+            <button class="btn btn-blue" style="margin-top: 20px; width:100%;" onclick="window.print()">Generate Report (PDF)</button>
         </div>
 
         <div>
-            <h3>Publication Types</h3>
-            <div style="width: 150px; height: 150px; border-radius: 50%; background: conic-gradient(orange 0% 25%, red 25% 40%, green 40% 65%, #2288cc 65% 100%); margin: 0 auto;"></div>
-
-            <h3>Author Productivity</h3>
-            <div>
-                <div class="bar-h" style="width: 80%; background: cyan; color: black;">Sanjeevan (10)</div>
-                <div class="bar-h" style="width: 60%; background: #33aadd;">Harvind (7)</div>
-                <div class="bar-h" style="width: 95%; background: #1166aa;">Aizad (16)</div>
-                <div class="bar-h" style="width: 40%; background: #114488;">Vidhya (5)</div>
+            <div class="chart-box" style="margin-bottom: 20px;">
+                <h3>Publication Types</h3>
+                <div style="height: 200px; display:flex; justify-content:center;">
+                    <canvas id="typeChart"></canvas>
+                </div>
             </div>
+
+            {% if mode == 'faculty' %}
+            <div class="chart-box">
+                <h3>Top 5 Author Productivity</h3>
+                <canvas id="authorChart"></canvas>
+            </div>
+            {% endif %}
         </div>
     </div>
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    
+    <script>
+        const annualData = {{ annual | tojson }};
+        const typeData = {{ types | tojson }};
+        const authorData = {{ authors | tojson }};
+
+        new Chart(document.getElementById('annualChart'), {
+            type: 'bar',
+            data: {
+                labels: annualData.labels,
+                datasets: [{ label: 'Papers', data: annualData.data, backgroundColor: '#33aadd' }]
+            }
+        });
+
+        new Chart(document.getElementById('typeChart'), {
+            type: 'doughnut',
+            data: {
+                labels: typeData.labels,
+                datasets: [{ data: typeData.data, backgroundColor: ['orange', 'red', 'green', '#2288cc'] }]
+            }
+        });
+
+        {% if mode == 'faculty' %}
+        new Chart(document.getElementById('authorChart'), {
+            type: 'bar',
+            indexAxis: 'y',
+            data: {
+                labels: authorData.labels,
+                datasets: [{ label: 'Papers', data: authorData.data, backgroundColor: '#1166aa' }]
+            }
+        });
+        {% endif %}
+    </script>
 </body>
 </html>
