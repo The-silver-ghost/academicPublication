@@ -65,14 +65,22 @@ def init_db():
     CREATE TABLE IF NOT EXISTS Paper (
         PaperID TEXT PRIMARY KEY,
         PaperTitle TEXT NOT NULL,
-        DOI TEXT NOT NULL,
+        DOI TEXT,
         DatePublished TEXT NOT NULL,
+        DateRequest TEXT NOT NULL,
         LinkToPaper TEXT NOT NULL,
         PaperType TEXT NOT NULL,
-        LecturerID TEXT NOT NULL,
+        CoverImage TEXT,
+        Authors TEXT,
+        Status TEXT DEFAULT 'Under Review',
+        LecturerID TEXT,
         StudentID TEXT,
+        CoordinatorID TEXT,
+        AdminID TEXT,
         FOREIGN KEY (LecturerID) REFERENCES Lecturer(LecturerID),
-        FOREIGN KEY (StudentID) REFERENCES Student(StudentID)
+        FOREIGN KEY (StudentID) REFERENCES Student(StudentID),
+        FOREIGN KEY (CoordinatorID) REFERENCES ProgrammeCoordinator(CoordinatorID),
+        FOREIGN KEY (AdminID) REFERENCES Admin(AdminID)
     )
     ''')
 
@@ -122,7 +130,8 @@ def populate_db():
 
     for code, name in faculties:
         cursor.execute("INSERT OR IGNORE INTO Faculty (FacultyID, FacultyName) VALUES (?, ?)", (code, name))
-
+        
+        # 2. Insert Admin
         admin_name = admin_names[admin_idx]
         admin_id = f"ADM-{code}-01"
         cursor.execute("INSERT OR IGNORE INTO Admin (AdminID, AdminPassword, AdminName) VALUES (?, ?, ?)", 
@@ -130,7 +139,7 @@ def populate_db():
         admin_idx += 1
 
         current_faculty_coords = []
-        for c_num in range(1, 3): # Loops 1 to 2
+        for c_num in range(1, 3): 
             coord_name = coord_names[coord_idx]
             coord_id = f"COO-{code}-0{c_num}"
             
@@ -145,7 +154,7 @@ def populate_db():
             lec_name = lecturer_names[lec_idx]
             lec_id = f"LEC-{code}-0{i}"
             lecturer_ids.append(lec_id)
-
+            
             assigned_coord = current_faculty_coords[(i - 1) % 2] 
 
             cursor.execute("INSERT OR IGNORE INTO Lecturer (LecturerID, LecturerPassword, LecturerName, CoordinatorID, AdminID, FacultyID) VALUES (?, ?, ?, ?, ?, ?)", 
@@ -155,9 +164,10 @@ def populate_db():
         for i in range(1, 6):
             student_name = student_names[stu_idx]
             stu_id = f"STU-{code}-0{i}"
-
+            
             assigned_lecturer = lecturer_ids[(i - 1) % 3]
-            is_final = 1 if i == 5 else 0
+            
+            is_final = 0 if i == 5 else 1
             
             cursor.execute("INSERT OR IGNORE INTO Student (StudentID, StudentPassword, StudentName, IsFinalYear, LecturerID, AdminID, FacultyID) VALUES (?, ?, ?, ?, ?, ?, ?)", 
                            (stu_id, "stu123", student_name, is_final, assigned_lecturer, admin_id, code))
