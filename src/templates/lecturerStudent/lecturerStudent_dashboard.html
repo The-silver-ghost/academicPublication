@@ -1,47 +1,84 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <title>Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <style>
+        .chart-box { background: #000a20; padding: 20px; border-radius: 10px; border: 1px solid #333; }
+        .filter-select { padding: 5px; background: #333; color: white; border: none; border-radius: 4px; }
+    </style>
 </head>
 <body>
     <header>
         <span class="icon" onclick="toggleMenu()">&#9776;</span>
         <span class="header-title">Analytics</span>
-        <a href="{{ url_for('lecturer_student_dashboard') }}" class="icon" style="text-decoration:none; color:inherit;">&#128100;</a>
+        <a href="{{ url_for('lecturer_student_home') }}" class="icon" style="text-decoration:none; color:inherit;">&#128100;</a>
     </header>
     
+    <div style="padding: 20px; display:flex; gap:10px; align-items:center; background:#000a20;">
+        <label style="color:white;">Filter Year:</label>
+        <form action="{{ url_for('lecturer_student_dashboard') }}" method="GET">
+            <select name="year" class="filter-select" onchange="this.form.submit()">
+                <option value="All">All Time</option>
+                {% for y in years %}
+                    <option value="{{ y }}" {% if year_filter == y %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+                </select>
+        </form>
+    </div>
+
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px;">
-        <div>
-            <h3>Paper Published</h3>
-            <select class ="filter-btn">
-                <option>Anually</option>
-                <option>Past 5 Years</option>
-            </select>
-            <div class = "chart-container">
-                <div class="bar" style="height: 40%; background: cyan;">2020</div>
-                <div class="bar" style="height: 40%; background: #33aadd;">2021</div>
-                <div class="bar" style="height: 70%; background: #2288cc;">2022</div>
-                <div class="bar" style="height: 90%; background: #1166aa;">2023</div>
-                <div class="bar" style="height: 70%; background: purple;">2024</div>
-            </div>
+        <div class="chart-box">
+            <h3>Papers Published Annually</h3>
+            <canvas id="annualChart"></canvas>
+            <button class="btn btn-blue" style="margin-top: 20px; width:100%;" onclick="window.print()">Generate Report (PDF)</button>
         </div>
 
-        <div>
+        <div class="chart-box">
             <h3>Publication Types</h3>
-            <select class ="filter-btn">
-                <option>All Time</option>
-                <option>Past 5 Years</option>
-            </select>
-            <div class ="pie"></div>
-            <div class = "pie-legend">
-                    <div><span class="legend-colour" style="background: orange;"></span> Book (25%)</div>
-                    <div><span class="legend-colour" style="background: red;"></span> Thesis/Dissertation (15%)</div>
-                    <div><span class="legend-colour" style="background: green;"></span> Conference Paper (25%)</div>
-                    <div><span class="legend-colour" style="background: #2288cc;"></span> Journal/Article (35%)</div>
-            </div>  
+            <div style="height: 300px; display:flex; justify-content:center;">
+                <canvas id="typeChart"></canvas>
+            </div>
         </div>
     </div>
     
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+        const annualData = {{ annual | tojson }};
+        const typeData = {{ types | tojson }};
+
+        new Chart(document.getElementById('annualChart'), {
+            type: 'bar',
+            data: {
+                labels: annualData.labels,
+                datasets: [{
+                    label: '# of Papers',
+                    data: annualData.data,
+                    backgroundColor: ['cyan', '#33aadd', '#2288cc', '#1166aa', 'purple']
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: { y: { beginAtZero: true } },
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        new Chart(document.getElementById('typeChart'), {
+            type: 'doughnut',
+            data: {
+                labels: typeData.labels,
+                datasets: [{
+                    data: typeData.data,
+                    backgroundColor: ['orange', 'red', 'green', '#2288cc']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    </script>
 </body>
 </html>

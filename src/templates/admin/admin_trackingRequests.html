@@ -4,6 +4,32 @@
     <title>Requests</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <style>
+        .preview-container {
+            width: 100%;
+            height: 350px;
+            background: #f0f0f0;
+            border: 2px dashed #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .preview-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: none; 
+        }
+        
+        .preview-text {
+            color: #888;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -21,12 +47,14 @@
     <div style="display: flex; gap: 30px; padding: 40px;">
         <form method="POST" action="" enctype="multipart/form-data" style="display: contents;">
             <div style="flex: 1;">
-                <div class="front-page-placeholder" style="width: 100%; height: 350px; background: white; color: black; font-size: 20px; display:flex; align-items:center; justify-content:center; border: 1px solid #ccc;">
-                    FRONT PAGE PREVIEW
+                <div class="preview-container" id="previewContainer">
+                    <span class="preview-text" id="previewText">FRONT PAGE PREVIEW</span>
+                    <img src="" alt="Cover Preview" class="preview-image" id="coverPreview">
                 </div>
+
                 <label class="btn btn-blue" style="width: 100%; margin-top: 10px; display:block; text-align:center; cursor:pointer;">
                     Select Cover Page
-                    <input type="file" name="cover_page" accept=".png, .jpg, .jpeg" style="display: none;">
+                    <input type="file" name="cover_page" accept=".png, .jpg, .jpeg" style="display: none;" onchange="previewImage(this)">
                 </label>
             </div>
 
@@ -61,5 +89,26 @@
             </div>
         </form>
     </div>
+
+    <script>
+        function previewImage(input) {
+            const preview = document.getElementById('coverPreview');
+            const placeholder = document.getElementById('previewText');
+            
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    placeholder.style.display = 'none';
+                }
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                preview.src = "";
+                preview.style.display = 'none';
+                placeholder.style.display = 'block';
+            }
+        }
+    </script>
 </body>
 </html>
