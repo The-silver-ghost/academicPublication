@@ -85,6 +85,15 @@ def init_db():
     )
     ''')
 
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS Bookmarks (
+        UserID TEXT NOT NULL,
+        PaperID TEXT NOT NULL,
+        PRIMARY KEY (UserID, PaperID),
+        FOREIGN KEY (PaperID) REFERENCES Paper(PaperID)
+    )
+    ''')
+
     conn.commit()
     conn.close()
 

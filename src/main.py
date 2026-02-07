@@ -29,6 +29,50 @@ def clean_name(name):
         name = name.replace(title, "")
     return name.strip()
 
+def get_public_search_results(user_id, page=1, per_page=10):
+    search_query = request.args.get('query', '').strip()
+    filter_type = request.args.get('filter_type', '')
+    filter_year = request.args.get('filter_year', '')
+    
+    # Base Query: Only show APPROVED papers for general search
+    # Also check if the current user has bookmarked each paper
+    sql = '''
+        SELECT p.*, 
+        CASE WHEN b.PaperID IS NOT NULL THEN 1 ELSE 0 END as IsBookmarked
+        FROM Paper p
+        LEFT JOIN Bookmarks b ON p.PaperID = b.PaperID AND b.UserID = ?
+        WHERE p.Status = 'Approved'
+    '''
+    params = [user_id]
+    
+    # 1. Search Logic
+    if search_query:
+        sql += " AND (p.PaperTitle LIKE ? OR p.Authors LIKE ?)"
+        params.extend([f"%{search_query}%", f"%{search_query}%"])
+
+    # 2. Filter Logic
+    if filter_type:
+        sql += " AND p.PaperType = ?"
+        params.append(filter_type)
+        
+    if filter_year:
+        sql += " AND substr(p.DatePublished, 1, 4) = ?" 
+        params.append(filter_year)
+
+    # 3. Pagination
+    conn = get_db_connection()
+    count_sql = f"SELECT COUNT(*) FROM ({sql})"
+    total_count = conn.execute(count_sql, params).fetchone()[0]
+    total_pages = ceil(total_count / per_page)
+    
+    offset = (page - 1) * per_page
+    sql += f" LIMIT {per_page} OFFSET {offset}"
+    
+    papers = conn.execute(sql, params).fetchall()
+    conn.close()
+    
+    return papers, total_count, total_pages, page
+
 def get_filtered_papers(base_query, query_params, page=1, per_page=10):
     search_query = request.args.get('query', '').strip()
     filter_type = request.args.get('filter_type', '')
@@ -271,6 +315,69 @@ def view_feedback_detail():
     conn.close()
     return render_template('mainScreens/view_feedback.html', paper=paper)
 
+@app.route('/bookmark/toggle', methods=['POST'])
+def toggle_bookmark():
+    user_id = session.get('user_id')
+    paper_id = request.form.get('paper_id')
+    
+    conn = get_db_connection()
+    # Check if exists
+    exists = conn.execute("SELECT 1 FROM Bookmarks WHERE UserID = ? AND PaperID = ?", (user_id, paper_id)).fetchone()
+    
+    if exists:
+        conn.execute("DELETE FROM Bookmarks WHERE UserID = ? AND PaperID = ?", (user_id, paper_id))
+        msg = "Removed from bookmarks"
+    else:
+        conn.execute("INSERT INTO Bookmarks (UserID, PaperID) VALUES (?, ?)", (user_id, paper_id))
+        msg = "Added to bookmarks"
+        
+    conn.commit()
+    conn.close()
+    return redirect(request.referrer)
+
+@app.route('/admin/remove_paper', methods=['POST'])
+def admin_remove_paper():
+    if session.get('role') != 'admin':
+        return redirect(url_for('login'))
+        
+    paper_id = request.form.get('paper_id')
+    conn = get_db_connection()
+    conn.execute("UPDATE Paper SET Status = 'Removed' WHERE PaperID = ?", (paper_id,))
+    conn.commit()
+    conn.close()
+    flash("Paper removed from search results.")
+    return redirect(request.referrer)
+
+def get_bookmarked_papers(user_id, page=1, per_page=10):
+    """
+    Fetches papers bookmarked by the user.
+    """
+    search_query = request.args.get('query', '').strip()
+    
+    sql = '''
+        SELECT p.* FROM Paper p
+        JOIN Bookmarks b ON p.PaperID = b.PaperID
+        WHERE b.UserID = ?
+    '''
+    params = [user_id]
+    
+    if search_query:
+        sql += " AND (p.PaperTitle LIKE ? OR p.Authors LIKE ?)"
+        params.extend([f"%{search_query}%", f"%{search_query}%"])
+
+    conn = get_db_connection()
+    count_sql = f"SELECT COUNT(*) FROM ({sql})"
+    total_count = conn.execute(count_sql, params).fetchone()[0]
+    total_pages = ceil(total_count / per_page)
+    
+    offset = (page - 1) * per_page
+    sql += f" LIMIT {per_page} OFFSET {offset}"
+    
+    papers = conn.execute(sql, params).fetchall()
+    conn.close()
+    
+    return papers, total_count, total_pages, page
+
 # ADMIN -----------------------------------------------------------------------------------------------
 @app.route('/admin/home')
 def admin_home():
@@ -282,12 +389,17 @@ def admin_dashboard():
 
 @app.route('/admin/bookmarks')
 def admin_bookmarks():
-    return render_template('admin/admin_bookmarks.html')
+    page = request.args.get('page', 1, type=int)
+    papers, total, pages, current = get_bookmarked_papers(session.get('user_id'), page)
+    return render_template('admin/admin_bookmarks.html', 
+                           papers=papers, total=total, pages=pages, current_page=current)
 
 @app.route('/admin/search_results')
 def admin_search_results():
-    search_term = request.args.get('query')
-    return render_template('admin/admin_publicationresults.html', search_term=search_term)
+    page = request.args.get('page', 1, type=int)
+    papers, total, pages, current = get_public_search_results(session.get('user_id'), page)
+    return render_template('admin/admin_publicationresults.html', 
+                           papers=papers, total=total, pages=pages, current_page=current)
 
 @app.route('/admin/status')
 def admin_status():
@@ -332,12 +444,17 @@ def coordinator_dashboard():
 
 @app.route('/coordinator/bookmarks')
 def coordinator_bookmarks():
-    return render_template('coordinator/coordinator_bookmarks.html')
+    page = request.args.get('page', 1, type=int)
+    papers, total, pages, current = get_bookmarked_papers(session.get('user_id'), page)
+    return render_template('coordinator/coordinator_bookmarks.html', 
+                           papers=papers, total=total, pages=pages, current_page=current)
 
 @app.route('/coordinator/search_results')
 def coordinator_search_results():
-    search_term = request.args.get('query')
-    return render_template('coordinator/coordinator_publicationresults.html', search_term=search_term)
+    page = request.args.get('page', 1, type=int)
+    papers, total, pages, current = get_public_search_results(session.get('user_id'), page)
+    return render_template('coordinator/coordinator_publicationresults.html', 
+                           papers=papers, total=total, pages=pages, current_page=current)
 
 @app.route('/coordinator/status')
 def coordinator_status():
@@ -391,12 +508,17 @@ def lecturer_student_dashboard():
 
 @app.route('/academic/bookmarks')
 def lecturer_student_bookmarks():
-    return render_template('lecturerStudent/lecturerStudent_bookmarks.html')
+    page = request.args.get('page', 1, type=int)
+    papers, total, pages, current = get_bookmarked_papers(session.get('user_id'), page)
+    return render_template('lecturerStudent/lecturerStudent_bookmarks.html', 
+                           papers=papers, total=total, pages=pages, current_page=current)
 
 @app.route('/academic/search_results') 
 def lecturer_student_search_results():
-    search_term = request.args.get('query')
-    return render_template('lecturerStudent/lecturerStudent_publicationresults.html', search_term=search_term)
+    page = request.args.get('page', 1, type=int)
+    papers, total, pages, current = get_public_search_results(session.get('user_id'), page)
+    return render_template('lecturerStudent/lecturerStudent_publicationresults.html', 
+                           papers=papers, total=total, pages=pages, current_page=current)
 
 @app.route('/academic/status')
 def lecturer_student_status():
