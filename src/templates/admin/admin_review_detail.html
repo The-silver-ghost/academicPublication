@@ -2,47 +2,50 @@
 <html>
 <head>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
     <style>
         .review-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; padding: 20px; }
-        .review-box { background: white; color: black; padding: 20px; border-radius: 10px; height: 150px; }
+        .review-box { background: white; color: black; padding: 10px; border-radius: 10px; height: 150px; width: 100%; box-sizing: border-box; resize: none; font-family: inherit;}
+        .preview-image { width: 100%; height: 250px; object-fit: contain; background: #ddd; }
     </style>
 </head>
 <body>
     <header>
-        <a href="{{ url_for('admin_home') }}" class="icon" style="text-decoration:none; color:inherit;">
-            &#8962;
-        </a>
+        <a href="{{ url_for('admin_status') }}" class="icon" style="text-decoration:none; color:inherit;">&#8962;</a>
         <span class="header-title">Review Tracking Request</span>
         <a href="{{ url_for('admin_dashboard') }}" class="icon" style="text-decoration:none; color:inherit;">&#128100;</a>
     </header>
 
     <div class="review-grid">
         <div style="text-align: center;">
-            <div class="front-page-placeholder" style="width: 100%; height: 250px; font-size: 16px;">FRONT PAGE</div>
-            <button class="btn btn-blue" style="margin-top: 10px; width: 100%;">View Publication</button>
+            {% if paper.CoverImage %}
+                <img src="{{ url_for('static', filename='uploads/covers/' + paper.CoverImage) }}" class="preview-image">
+            {% else %}
+                <div class="front-page-placeholder" style="height: 250px;">NO COVER</div>
+            {% endif %}
+            <a href="{{ paper.LinkToPaper }}" target="_blank" class="btn btn-blue" style="margin-top: 10px; width: 100%; display:block; text-align:center; text-decoration:none; box-sizing: border-box;">View Publication</a>
         </div>
 
         <div>
-            <div style="display: flex; justify-content: space-between;">
-                <div>
-                    <h2>Title: Test Title 4</h2>
-                    <p>Author(s): Vidhya</p>
-                    <p>Date: 2026-01-29</p>
+            <form action="{{ url_for('submit_review') }}" method="POST">
+                <input type="hidden" name="paper_id" value="{{ paper.PaperID }}">
+                
+                <div style="display: flex; justify-content: space-between;">
+                    <div>
+                        <h2>Title: {{ paper.PaperTitle }}</h2>
+                        <p>Author(s): {{ paper.Authors }}</p>
+                        <p>Date Published: {{ paper.DatePublished }}</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <button type="submit" name="action" value="approve" class="btn" style="background: green; margin-bottom: 5px; width: 120px;">Approve &#10004;</button><br>
+                        <button type="submit" name="action" value="reject" class="btn" style="background: red; width: 120px;">Reject &#10006;</button>
+                    </div>
                 </div>
-                <div>
-                    <button class="btn" style="background: green; margin-bottom: 5px;">Approve &#10004;</button><br>
-                    <button class="btn" style="background: red;">Reject &#10006;</button>
-                </div>
-            </div>
-            
-            <div class="review-box">
-                Review...
-            </div>
-            <div style="text-align: right; margin-top: 10px;">
-                <button class="btn btn-blue">Send Feedback</button>
-            </div>
+                
+                <h3>Feedback / Comments:</h3>
+                <textarea name="feedback" class="review-box" placeholder="Enter your review feedback here..." required></textarea>
+            </form>
         </div>
     </div>
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>

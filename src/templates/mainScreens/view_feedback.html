@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>View Feedback</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <style>
+        .review-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; padding: 20px; }
+        .feedback-box { background: #eee; color: #333; padding: 20px; border-radius: 10px; height: 150px; overflow-y: auto; }
+        .preview-image { width: 100%; height: 250px; object-fit: contain; background: #ddd; }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="javascript:history.back()" class="icon" style="text-decoration:none; color:inherit;">&#8962;</a>
+        <span class="header-title">Publication Feedback</span>
+        <span class="icon">&#128100;</span>
+    </header>
+
+    <div class="review-grid">
+        <div style="text-align: center;">
+            {% if paper.CoverImage %}
+                <img src="{{ url_for('static', filename='uploads/covers/' + paper.CoverImage) }}" class="preview-image">
+            {% else %}
+                <div class="front-page-placeholder" style="height: 250px;">NO COVER</div>
+            {% endif %}
+            <a href="{{ paper.LinkToPaper }}" target="_blank" class="btn btn-blue" style="margin-top: 10px; width: 100%; display:block; text-align:center; text-decoration:none; box-sizing: border-box;">View Publication</a>
+        </div>
+        <div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                <div>
+                    <h2>Title: {{ paper.PaperTitle }}</h2>
+                    <p>Author(s): {{ paper.Authors }}</p>
+                    <p>Date Published: {{ paper.DatePublished }}</p>
+                </div>
+                <div>
+                    {% if paper.Status == 'Approved' %}
+                        <div class="status-arrow st-approved" style="font-size: 16px; padding: 10px 20px;">Approved &#10004;</div>
+                    {% elif paper.Status == 'Rejected' %}
+                        <div class="status-arrow st-rejected" style="font-size: 16px; padding: 10px 20px;">Rejected &#10006;</div>
+                    {% endif %}
+                </div>
+            </div>
+            <h3>Reviewer Feedback:</h3>
+            <div class="feedback-box">
+                {% if paper.Feedback %}
+                    {{ paper.Feedback }}
+                {% else %}
+                    <em>No feedback provided.</em>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>
