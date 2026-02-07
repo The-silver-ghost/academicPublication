@@ -73,6 +73,7 @@ def init_db():
         CoverImage TEXT,
         Authors TEXT,
         Status TEXT DEFAULT 'Under Review',
+        Feedback TEXT,
         LecturerID TEXT,
         StudentID TEXT,
         CoordinatorID TEXT,

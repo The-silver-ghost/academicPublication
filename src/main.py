@@ -242,6 +242,35 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
+@app.route('/review/submit', methods=['POST'])
+def submit_review():
+    paper_id = request.form.get('paper_id')
+    action = request.form.get('action')
+    feedback = request.form.get('feedback')
+    
+    new_status = "Approved" if action == "approve" else "Rejected"
+    
+    conn = get_db_connection()
+    conn.execute("UPDATE Paper SET Status = ?, Feedback = ? WHERE PaperID = ?", 
+                 (new_status, feedback, paper_id))
+    conn.commit()
+    conn.close()
+    
+    flash(f"Paper {new_status} successfully.")
+    
+    if session.get('role') == 'admin':
+        return redirect(url_for('admin_status'))
+    else:
+        return redirect(url_for('coordinator_status'))
+
+@app.route('/feedback/view')
+def view_feedback_detail():
+    paper_id = request.args.get('id')
+    conn = get_db_connection()
+    paper = conn.execute("SELECT * FROM Paper WHERE PaperID = ?", (paper_id,)).fetchone()
+    conn.close()
+    return render_template('mainScreens/view_feedback.html', paper=paper)
+
 # ADMIN -----------------------------------------------------------------------------------------------
 @app.route('/admin/home')
 def admin_home():
@@ -282,7 +311,11 @@ def admin_requests():
 
 @app.route('/admin/review_detail')
 def admin_review_detail():
-    return render_template('admin/admin_review_detail.html')
+    paper_id = request.args.get('id')
+    conn = get_db_connection()
+    paper = conn.execute("SELECT * FROM Paper WHERE PaperID = ?", (paper_id,)).fetchone()
+    conn.close()
+    return render_template('admin/admin_review_detail.html', paper=paper)
 
 @app.route('/admin/users')
 def admin_users():
@@ -341,7 +374,11 @@ def coordinator_requests():
 
 @app.route('/coordinator/review')
 def coordinator_review():
-    return render_template('coordinator/coordinator_review_detail.html')
+    paper_id = request.args.get('id')
+    conn = get_db_connection()
+    paper = conn.execute("SELECT * FROM Paper WHERE PaperID = ?", (paper_id,)).fetchone()
+    conn.close()
+    return render_template('coordinator/coordinator_review_detail.html', paper=paper)
 
 # LECTURER/STUDENT -----------------------------------------------------------------------
 @app.route('/academic/home')
