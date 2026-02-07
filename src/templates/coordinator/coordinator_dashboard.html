@@ -2,34 +2,33 @@
 <html>
 <head>
     <title>Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="{{ url_for('static', filename='script.js') }}"></script>
-    <style>
-        .chart-box { background: #000a20; padding: 20px; border-radius: 10px; border: 1px solid #333; }
-        .filter-select { padding: 5px; background: #333; color: white; border: none; border-radius: 4px; }
-        .toggle-btn { opacity: 0.5; }
-        .toggle-btn.active { opacity: 1; border: 2px solid white; }
-    </style>
 </head>
 <body>
     <header>
-        <span class="icon" onclick="toggleMenu()">&#9776;</span>
+        <span class="icon" onclick="toggleMenu()"><i class="fas fa-bars"></i></span>
         <span class="header-title">Analytics</span>
         
         <div style="display: flex; gap: 10px;">
-            <a href="{{ url_for('coordinator_dashboard', mode='faculty') }}" class="btn toggle-btn {% if mode == 'faculty' %}active{% endif %}" style="background: #7a0f5a; text-decoration:none;">Faculty</a>
-            <a href="{{ url_for('coordinator_dashboard', mode='personal') }}" class="btn toggle-btn {% if mode == 'personal' %}active{% endif %}" style="background: #a34878; text-decoration:none;">Personal</a>
+            <a href="{{ url_for('coordinator_dashboard', mode='faculty') }}" class="btn mode-btn {% if mode == 'faculty' %}active{% endif %}" style="text-decoration:none; padding: 8px 20px;">
+                <i class="fas fa-university"></i> Faculty
+            </a>
+            <a href="{{ url_for('coordinator_dashboard', mode='personal') }}" class="btn mode-btn {% if mode == 'personal' %}active{% endif %}" style="text-decoration:none; padding: 8px 20px;">
+                <i class="fas fa-user"></i> Personal
+            </a>
         </div>
         
-        <span class="icon">&#128100;</span>
+        <span class="icon"><i class="fas fa-user-circle"></i></span>
     </header>
 
-    <div style="padding: 20px; display:flex; gap:10px; align-items:center; background:#000a20;">
-        <label style="color:white;">Filter Year:</label>
+    <div class="toolbar" style="justify-content: flex-start; gap: 15px;">
+        <label style="color:var(--text-muted); font-weight:600;"><i class="fas fa-filter"></i> Filter Year:</label>
         <form action="{{ url_for('coordinator_dashboard') }}" method="GET">
             <input type="hidden" name="mode" value="{{ mode }}">
-            <select name="year" class="filter-select" onchange="this.form.submit()">
+            <select name="year" class="form-control" onchange="this.form.submit()" style="width: auto; padding: 8px 15px;">
                 <option value="All">All Time</option>
                 {% for y in years %}
                     <option value="{{ y }}" {% if year_filter == y %}selected{% endif %}>{{ y }}</option>
@@ -38,24 +37,26 @@
         </form>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px;">
+    <div class="dashboard-grid">
         <div class="chart-box">
-            <h3>Papers Published Annually</h3>
+            <h3 style="margin-bottom: 20px; color: var(--primary);">Papers Published Annually</h3>
             <canvas id="annualChart"></canvas>
-            <button class="btn btn-blue" style="margin-top: 20px; width:100%;" onclick="window.print()">Generate Report (PDF)</button>
+            <button class="btn btn-blue" style="margin-top: 20px; width:100%;" onclick="window.print()">
+                <i class="fas fa-file-pdf"></i> Generate Report
+            </button>
         </div>
 
         <div>
             <div class="chart-box" style="margin-bottom: 20px;">
-                <h3>Publication Types</h3>
-                <div style="height: 200px; display:flex; justify-content:center;">
+                <h3 style="margin-bottom: 20px; color: var(--accent);">Publication Types</h3>
+                <div style="height: 250px; display:flex; justify-content:center;">
                     <canvas id="typeChart"></canvas>
                 </div>
             </div>
 
             {% if mode == 'faculty' %}
             <div class="chart-box">
-                <h3>Top 5 Author Productivity</h3>
+                <h3 style="margin-bottom: 20px; color: #10b981;">Top 5 Author Productivity</h3>
                 <canvas id="authorChart"></canvas>
             </div>
             {% endif %}
@@ -67,20 +68,25 @@
         const typeData = {{ types | tojson }};
         const authorData = {{ authors | tojson }};
 
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.borderColor = 'rgba(255,255,255,0.1)';
+
         new Chart(document.getElementById('annualChart'), {
             type: 'bar',
             data: {
                 labels: annualData.labels,
-                datasets: [{ label: 'Papers', data: annualData.data, backgroundColor: '#33aadd' }]
-            }
+                datasets: [{ label: 'Papers', data: annualData.data, backgroundColor: '#3b82f6', borderRadius: 4 }]
+            },
+            options: { scales: { y: { beginAtZero: true } } }
         });
 
         new Chart(document.getElementById('typeChart'), {
             type: 'doughnut',
             data: {
                 labels: typeData.labels,
-                datasets: [{ data: typeData.data, backgroundColor: ['orange', 'red', 'green', '#2288cc'] }]
-            }
+                datasets: [{ data: typeData.data, backgroundColor: ['#f59e0b', '#ef4444', '#10b981', '#3b82f6'], borderWidth: 0 }]
+            },
+            options: { maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
         });
 
         {% if mode == 'faculty' %}
@@ -89,7 +95,7 @@
             indexAxis: 'y',
             data: {
                 labels: authorData.labels,
-                datasets: [{ label: 'Papers', data: authorData.data, backgroundColor: '#1166aa' }]
+                datasets: [{ label: 'Papers', data: authorData.data, backgroundColor: '#10b981', borderRadius: 4 }]
             }
         });
         {% endif %}

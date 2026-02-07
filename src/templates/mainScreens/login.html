@@ -1,22 +1,43 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <title>Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <div class="login-container">
-        <h1>Login</h1>
-        {% with messages = get_flashed_messages() %}
-          {% if messages %}
-            <div style="color: red; text-align: center;">{{ messages[0] }}</div>
-          {% endif %}
-        {% endwith %}
+    <div class="hero-container">
+        
+        <div class="chart-box" style="width: 100%; max-width: 400px; padding: 40px; text-align: center;">
+            <h1 style="margin-bottom: 30px; font-size: 2rem; background: var(--primary-gradient); background-clip: text; -webkit-background-clip: text; color: transparent;">
+                Login
+            </h1>
 
-        <form action="{{ url_for('login') }}" method="POST">
-            <input type="text" name="user_id" class="login-input" placeholder="UserID" required>
-            <input type="password" name="password" class="login-input" placeholder="Password" required>
-            <button type="submit" class="btn btn-blue" style="margin-top:20px; width: 330px;">ENTER</button>
-        </form>
+            {% with messages = get_flashed_messages() %}
+              {% if messages %}
+                <div style="margin-bottom: 20px; color: #f87171; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.3);">
+                    <i class="fas fa-exclamation-circle"></i> {{ messages[0] }}
+                </div>
+              {% endif %}
+            {% endwith %}
+
+            <form action="{{ url_for('login') }}" method="POST" style="display: flex; flex-direction: column; gap: 20px;">
+                <div class="search-container" style="max-width: 100%;">
+                    <i class="fas fa-user" style="color: var(--text-muted); margin-left: 15px;"></i>
+                    <input type="text" name="user_id" placeholder="User ID" required style="padding-left: 10px;">
+                </div>
+
+                <div class="search-container" style="max-width: 100%;">
+                    <i class="fas fa-lock" style="color: var(--text-muted); margin-left: 15px;"></i>
+                    <input type="password" name="password" placeholder="Password" required style="padding-left: 10px;">
+                </div>
+
+                <button type="submit" class="btn btn-blue" style="width: 100%; padding: 12px; margin-top: 10px;">
+                    ENTER <i class="fas fa-sign-in-alt"></i>
+                </button>
+            </form>
         </div>
+
+    </div>
 </body>
 </html>

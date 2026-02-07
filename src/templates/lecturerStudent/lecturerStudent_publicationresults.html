@@ -52,9 +52,7 @@
 
 <body>
     <header>
-        <a href="{{ url_for('lecturer_student_dashboard') }}" class="icon"
-            style="text-decoration:none; color:inherit;">&#8962;</a>
-
+        <span class="icon" onclick="toggleMenu()">&#9776;</span>
         <form action="{{ url_for('lecturer_student_search_results') }}" method="GET"
             style="display:flex; align-items:center;">
             <div class="search-container" style="width: 500px;">

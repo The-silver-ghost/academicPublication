@@ -73,6 +73,37 @@ def get_public_search_results(user_id, page=1, per_page=10):
     
     return papers, total_count, total_pages, page
 
+def generate_new_user_id(role, faculty_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    prefix_map = {
+        'Student': ('STU', 'Student'),
+        'Lecturer': ('LEC', 'Lecturer'),
+        'ProgrammeCoordinator': ('COO', 'ProgrammeCoordinator'),
+        'Admin': ('ADM', 'Admin')
+    }
+    
+    prefix, table = prefix_map.get(role)
+    
+    query = f"SELECT {table}ID FROM {table} WHERE {table}ID LIKE ?"
+    cursor.execute(query, (f"{prefix}-{faculty_id}-%",))
+    existing_ids = [row[0] for row in cursor.fetchall()]
+    conn.close()
+
+    max_num = 0
+    for eid in existing_ids:
+        try:
+            parts = eid.split('-')
+            if len(parts) == 3:
+                num = int(parts[2])
+                if num > max_num: max_num = num
+        except:
+            continue
+            
+    new_num = max_num + 1
+    return f"{prefix}-{faculty_id}-{str(new_num).zfill(2)}"
+
 def get_analytics_data(user_role, user_id=None, faculty_id=None, year_filter=None):
     conn = get_db_connection()
     papers = []
@@ -524,9 +555,146 @@ def admin_review_detail():
     conn.close()
     return render_template('admin/admin_review_detail.html', paper=paper)
 
-@app.route('/admin/users')
+@app.route('/admin/users', methods=['GET'])
 def admin_users():
-    return render_template('admin/userManagement.html')
+    if session.get('role') != 'admin': return redirect(url_for('login'))
+    
+    conn = get_db_connection()
+    faculties = conn.execute("SELECT * FROM Faculty").fetchall()
+    coords = conn.execute("SELECT CoordinatorID, CoordinatorName, FacultyID FROM ProgrammeCoordinator").fetchall()
+    lecturers = conn.execute("SELECT LecturerID, LecturerName, FacultyID FROM Lecturer").fetchall()
+    conn.close()
+    
+    return render_template('admin/userManagement.html', 
+                           faculties=faculties, coords=coords, lecturers=lecturers)
+
+@app.route('/admin/users/search', methods=['POST'])
+def search_user():
+    user_id = request.json.get('user_id')
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    user_data = None
+    role = None
+
+    tables = [
+        ('Student', 'StudentID'), 
+        ('Lecturer', 'LecturerID'), 
+        ('ProgrammeCoordinator', 'CoordinatorID'), 
+        ('Admin', 'AdminID')
+    ]
+
+    for table, pk in tables:
+        row = cursor.execute(f"SELECT * FROM {table} WHERE {pk} = ?", (user_id,)).fetchone()
+        if row:
+            user_data = dict(row)
+            role = table
+            break
+    
+    conn.close()
+    
+    if user_data:
+        return json.dumps({'success': True, 'role': role, 'data': user_data})
+    else:
+        return json.dumps({'success': False})
+    
+@app.route('/admin/users/save', methods=['POST'])
+def save_user():
+    action = request.form.get('action')
+    role = request.form.get('role')
+    faculty_id = request.form.get('faculty')
+    name = request.form.get('name')
+    password = request.form.get('password')
+    
+    is_final_year = 1 if request.form.get('is_final_year') else 0
+    assigned_lecturer = request.form.get('assigned_lecturer')
+    assigned_coord = request.form.get('assigned_coord')
+    
+    original_id = request.form.get('original_id')
+    original_role = request.form.get('original_role')
+
+    admin_id = session.get('user_id')
+    conn = get_db_connection()
+    
+    try:
+        if action == 'delete':
+            table = original_role
+            pk = f"{original_role}ID" if original_role != 'ProgrammeCoordinator' else 'CoordinatorID'
+            conn.execute(f"DELETE FROM {table} WHERE {pk} = ?", (original_id,))
+            flash("User deleted successfully.")
+
+        elif action == 'create':
+            new_id = generate_new_user_id(role, faculty_id)
+            
+            if role == 'Student':
+                conn.execute("INSERT INTO Student (StudentID, StudentPassword, StudentName, IsFinalYear, LecturerID, AdminID, FacultyID) VALUES (?,?,?,?,?,?,?)",
+                             (new_id, password, name, is_final_year, assigned_lecturer, admin_id, faculty_id))
+            elif role == 'Lecturer':
+                conn.execute("INSERT INTO Lecturer (LecturerID, LecturerPassword, LecturerName, CoordinatorID, AdminID, FacultyID) VALUES (?,?,?,?,?,?)",
+                             (new_id, password, name, assigned_coord, admin_id, faculty_id))
+            elif role == 'ProgrammeCoordinator':
+                conn.execute("INSERT INTO ProgrammeCoordinator (CoordinatorID, CoordinatorPassword, CoordinatorName, FacultyID, AdminID) VALUES (?,?,?,?,?)",
+                             (new_id, password, name, faculty_id, admin_id))
+            elif role == 'Admin':
+                conn.execute("INSERT INTO Admin (AdminID, AdminPassword, AdminName) VALUES (?,?,?)",
+                             (new_id, password, name))
+            
+            flash(f"User created: {new_id}")
+
+        elif action == 'update':
+            if role == original_role:
+                if role == 'Student':
+                    conn.execute("UPDATE Student SET StudentName=?, StudentPassword=?, IsFinalYear=?, LecturerID=?, FacultyID=? WHERE StudentID=?",
+                                 (name, password, is_final_year, assigned_lecturer, faculty_id, original_id))
+                elif role == 'Lecturer':
+                    conn.execute("UPDATE Lecturer SET LecturerName=?, LecturerPassword=?, CoordinatorID=?, FacultyID=? WHERE LecturerID=?",
+                                 (name, password, assigned_coord, faculty_id, original_id))
+                elif role == 'ProgrammeCoordinator':
+                    conn.execute("UPDATE ProgrammeCoordinator SET CoordinatorName=?, CoordinatorPassword=?, FacultyID=? WHERE CoordinatorID=?",
+                                 (name, password, faculty_id, original_id))
+                flash(f"User {original_id} updated.")
+            
+            else:
+                new_id = generate_new_user_id(role, faculty_id)
+                
+                if role == 'Student':
+                    conn.execute("INSERT INTO Student (StudentID, StudentPassword, StudentName, IsFinalYear, LecturerID, AdminID, FacultyID) VALUES (?,?,?,?,?,?,?)",
+                                 (new_id, password, name, is_final_year, assigned_lecturer, admin_id, faculty_id))
+                elif role == 'Lecturer':
+                    conn.execute("INSERT INTO Lecturer (LecturerID, LecturerPassword, LecturerName, CoordinatorID, AdminID, FacultyID) VALUES (?,?,?,?,?,?)",
+                                 (new_id, password, name, assigned_coord, admin_id, faculty_id))
+                elif role == 'ProgrammeCoordinator':
+                    conn.execute("INSERT INTO ProgrammeCoordinator (CoordinatorID, CoordinatorPassword, CoordinatorName, FacultyID, AdminID) VALUES (?,?,?,?,?)",
+                                 (new_id, password, name, faculty_id, admin_id))
+
+                conn.execute("UPDATE Bookmarks SET UserID = ? WHERE UserID = ?", (new_id, original_id))
+            
+                role_col_map = {
+                    'Student': 'StudentID',
+                    'Lecturer': 'LecturerID',
+                    'ProgrammeCoordinator': 'CoordinatorID'
+                }
+                
+                old_col = role_col_map.get(original_role)
+                new_col = role_col_map.get(role)
+
+                if old_col and new_col:
+                    conn.execute(f"UPDATE Paper SET {new_col} = ?, {old_col} = NULL WHERE {old_col} = ?", (new_id, original_id))
+
+                old_table = original_role
+                old_pk = f"{original_role}ID" if original_role != 'ProgrammeCoordinator' else 'CoordinatorID'
+                conn.execute(f"DELETE FROM {old_table} WHERE {old_pk} = ?", (original_id,))
+                
+                flash(f"User migrated from {original_id} to {new_id}")
+
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        flash(f"Error: {str(e)}")
+    finally:
+        conn.close()
+
+    return redirect(url_for('admin_users'))
 
 # COORDINATOR -------------------------------------------------------------------------------------
 @app.route('/coordinator/home')

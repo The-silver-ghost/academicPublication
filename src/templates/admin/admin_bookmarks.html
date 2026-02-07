@@ -1,80 +1,73 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <title>Bookmarks</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="{{ url_for('static', filename='script.js') }}"></script>
     <style>
-        .btn-bookmark {
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 0;
-        }
+        .btn-bookmark { background: none; border: none; cursor: pointer; padding: 0; }
     </style>
 </head>
 <body>
     <header>
-        <a href="{{ url_for('admin_home') }}" class="icon" style="text-decoration:none; color:inherit;">&#8962;</a>
+        <span class="icon" onclick="toggleMenu()"><i class="fas fa-bars"></i></span>
         <span class="header-title">Bookmarks</span>
 
         <form action="{{ url_for('admin_bookmarks') }}" method="GET" style="display:flex; align-items:center;">
-            <div class="search-container" style="width: 200px;">
-                <input type="text" name="query" placeholder="Search saved..."
-                    value="{{ request.args.get('query', '') }}">
-                <button type="submit"
-                    style="background:none; border:none; cursor:pointer;"><span>&#128269;</span></button>
+            <div class="search-container" style="width: 300px;">
+                <input type="text" name="query" placeholder="Search saved..." value="{{ request.args.get('query', '') }}">
+                <button type="submit"><i class="fas fa-search"></i></button>
             </div>
         </form>
-        <a href="{{ url_for('admin_dashboard') }}" class="icon"
-            style="text-decoration:none; color:inherit;">&#128100;</a>
+        <a href="{{ url_for('admin_dashboard') }}" class="icon"><i class="fas fa-tachometer-alt"></i></a>
     </header>
 
-    <div style="background: #000a20; padding: 10px; display: flex; justify-content: flex-end; align-items: center;">
+    <div class="toolbar" style="justify-content: flex-end;">
         <div class="pagenumber-container">
             <span>{{ total }} Saved</span>
-            <span class="divider">|</span>
+            <span style="margin: 0 10px; color: var(--border);">|</span>
             {% if current_page > 1 %}
-            <a href="{{ url_for('admin_bookmarks', page=current_page-1, query=request.args.get('query')) }}"
-                class="page-link">&lt; Prev</a>
+                <a href="{{ url_for('admin_bookmarks', page=current_page-1, query=request.args.get('query')) }}" class="page-link"><i class="fas fa-chevron-left"></i></a>
             {% endif %}
             {% for p in range(1, pages + 1) %}
-            <a href="{{ url_for('admin_bookmarks', page=p, query=request.args.get('query')) }}"
-                class="page-link {% if p == current_page %}active{% endif %}">{{ p }}</a>
+                <a href="{{ url_for('admin_bookmarks', page=p, query=request.args.get('query')) }}" class="page-link {% if p == current_page %}active{% endif %}">{{ p }}</a>
             {% endfor %}
-            {% if current_page < pages %} <a
-                href="{{ url_for('admin_bookmarks', page=current_page+1, query=request.args.get('query')) }}"
-                class="page-link">Next &gt;</a>
-                {% endif %}
+            {% if current_page < pages %}
+                <a href="{{ url_for('admin_bookmarks', page=current_page+1, query=request.args.get('query')) }}" class="page-link"><i class="fas fa-chevron-right"></i></a>
+            {% endif %}
         </div>
     </div>
 
     <div class="list-container">
         {% for paper in papers %}
         <div class="list-item">
-            <div class="index">{{ (current_page - 1) * 10 + loop.index }}.</div>
+            <div class="index">{{ (current_page - 1) * 10 + loop.index }}</div>
+            
             {% if paper.CoverImage %}
-            <img src="{{ url_for('static', filename='uploads/covers/' + paper.CoverImage) }}"
-                class="front-page-placeholder" style="object-fit: cover;">
+                <img src="{{ url_for('static', filename='uploads/covers/' + paper.CoverImage) }}" style="width: 80px; height: 110px; object-fit: cover; border-radius: 6px;">
             {% else %}
-            <div class="front-page-placeholder">FRONT PAGE</div>
+                <div class="front-page-placeholder" style="width: 80px; height: 110px;"><i class="fas fa-file-alt fa-2x"></i></div>
             {% endif %}
 
-            <div class="item-details">
-                <h3><a href="{{ paper.LinkToPaper }}" target="_blank" style="text-decoration:none; color:inherit;">{{
-                        paper.PaperTitle }}</a></h3>
-                <p>Author(s): {{ paper.Authors }}</p>
-                <p>{{ paper.DatePublished }}, {{ paper.PaperType }}</p>
+            <div class="item-details" style="flex: 1;">
+                <h3><a href="{{ paper.LinkToPaper }}" target="_blank">{{ paper.PaperTitle }}</a></h3>
+                <p><i class="fas fa-user-edit"></i> {{ paper.Authors }}</p>
+                <p><i class="far fa-calendar-alt"></i> {{ paper.DatePublished }} &bull; {{ paper.PaperType }}</p>
             </div>
 
             <form action="{{ url_for('toggle_bookmark') }}" method="POST">
                 <input type="hidden" name="paper_id" value="{{ paper.PaperID }}">
-                <button type="submit" class="btn-bookmark">
-                    <div class="icon-bookmark filled" title="Unsave"></div>
+                <button type="submit" class="btn-bookmark" title="Remove Bookmark">
+                    <i class="fas fa-bookmark icon-bookmark filled"></i>
                 </button>
             </form>
         </div>
         {% else %}
-        <div style="padding: 20px; text-align: center; color: white;">No bookmarks found.</div>
+            <div style="text-align: center; padding: 4rem; color: var(--text-muted);">
+                <i class="far fa-bookmark fa-3x" style="margin-bottom: 1rem; opacity: 0.5;"></i>
+                <p>No bookmarks found.</p>
+            </div>
         {% endfor %}
     </div>
 </body>
