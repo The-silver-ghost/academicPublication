@@ -40,7 +40,7 @@ def login():
         if cursor.fetchone():
             session['user_id'] = user_id
             session['role'] = 'lecturer'
-            return redirect(url_for('public_home'))
+            return redirect(url_for('lecturer_home'))
 
         cursor.execute("SELECT * FROM Student WHERE StudentID = ? AND StudentPassword = ?", (user_id, password))
         if cursor.fetchone():
@@ -118,6 +118,10 @@ def coordinator_review():
 @app.route('/lecturer/dashboard')
 def lecturer_dashboard():
     return render_template('lecturerStudent/lecturerDashboard.html')
+
+@app.route('/lecturer/home')
+def lecturer_home():
+    return render_template('lecturerStudent/lecturerhome.html')
 
 @app.route('/student/dashboard')
 def student_dashboard():
