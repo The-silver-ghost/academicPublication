@@ -7,9 +7,11 @@
     </head>
     <body>
         <header>
-            <span class="icon" onclick="navigateTo('../admin/home.html')">&#8962;</span>
+            <a href="{{ url_for('admin_home') }}" class="icon" style="text-decoration:none; color:inherit;">
+                &#8962;
+            </a>
             <span class="header-title">User Management</span>
-            <span class="icon">&#128100;</span>
+            <a href="{{ url_for('admin_dashboard') }}" class="icon" style="text-decoration:none; color:inherit;">&#128100;</a>
         </header>
         <div id="side-by-side">
             <div id="left-side">

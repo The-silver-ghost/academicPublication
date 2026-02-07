@@ -9,9 +9,11 @@
 </head>
 <body>
     <header>
-        <span class="icon" onclick="navigateTo('../lecturerStudent/tracking_status.html')">&#8962;</span>
+        <a href="{{ url_for('admin_home') }}" class="icon" style="text-decoration:none; color:inherit;">
+            &#8962;
+        </a>
         <span class="header-title">Review Tracking Request</span>
-        <span class="icon">&#128100;</span>
+        <a href="{{ url_for('admin_dashboard') }}" class="icon" style="text-decoration:none; color:inherit;">&#128100;</a>
     </header>
 
     <div class="review-grid">
@@ -41,6 +43,6 @@
             </div>
         </div>
     </div>
-    <script src="../../scripts/script.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>

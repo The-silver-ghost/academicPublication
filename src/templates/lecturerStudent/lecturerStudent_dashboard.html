@@ -7,9 +7,9 @@
     <header>
         <span class="icon" onclick="toggleMenu()">&#9776;</span>
         <span class="header-title">Analytics</span>
-        <a href="{{ url_for('lecturerStudent' filename='.css') }}" class="icon">&#128100;</a>
-        
+        <a href="{{ url_for('lecturer_student_dashboard') }}" class="icon" style="text-decoration:none; color:inherit;">&#128100;</a>
     </header>
+    
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px;">
         <div>
             <h3>Paper Published</h3>
@@ -41,9 +41,7 @@
             </div>  
         </div>
     </div>
-   
     
-    <script src="../../scripts/script.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
-

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Requests</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</head>
+<body>
+    <header>
+        <a href="{{ url_for('admin_home') }}" class="icon" style="text-decoration:none; color:inherit;">
+            &#8962;
+        </a>
+        <span class="header-title">Requests</span>
+        
+        <form action="{{ url_for('admin_search_results') }}" method="GET" style="display:flex; align-items:center;">
+            <div class="search-container" style="width: 500px;">
+                <span style="font-weight: bold;">Search...</span>
+                <input type="text" name="query">
+                <button type="submit" style="background:none; border:none; cursor:pointer;">
+                    <span>&#128269;</span>
+                </button>
+            </div>
+        </form>
+        
+        <a href="{{ url_for('admin_dashboard') }}" class="icon" style="text-decoration:none; color:inherit;">&#128100;</a>
+    </header>
+
+    <div style="background: #000a20; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
+        <button class="filter-btn" style="margin:0;">Filter ></button>
+        <div class="pagenumber-container">
+            <span>100 Results</span>
+            <span class="divider">|</span>
+            <a href="#" class="page-link active">1</a>
+            <a href="#" class="page-link">2</a>
+            <a href="#" class="page-link">3</a>
+            <a href="#" class="page-link">4</a>
+            <a href="#" class="page-link">Next ></a>
+        </div>
+    </div>
+
+    <div class="list-container">
+        <div class="list-item">
+            <div class="index">1.</div>
+            <div class="front-page-placeholder">FRONT PAGE</div>
+            <div class="item-details">
+                <h3>Test Title 1</h3>
+                <p>Author: Sanjeevan</p>
+                <p>2026, Type</p>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <button class="btn btn-red">X</button>
+                <div class="status-arrow st-review">Review</div>
+            </div>
+        </div>
+        </div>
+</body>
+</html>

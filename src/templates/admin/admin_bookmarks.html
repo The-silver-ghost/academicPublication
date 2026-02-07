@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <a href="{{ url_for('admin_home') }}" class="icon" style="text-decoration:none; color:inherit;">
+            &#8962;
+        </a>
+        <span class="header-title">Bookmarks</span>
+        
+        <form action="{{ url_for('admin_search_results') }}" method="GET" style="display:flex; align-items:center;">
+            <div class="search-container" style="width: 200px;">
+                <input type="text" name="query" placeholder="Search">
+                <button type="submit" style="background:none; border:none; cursor:pointer;">
+                    <span>&#128269;</span>
+                </button>
+            </div>
+        </form>
+        
+        <a href="{{ url_for('admin_dashboard') }}" class="icon" style="text-decoration:none; color:inherit;">&#128100;</a>
+    </header>
+
+    <div style="background: #000a20; padding: 10px; display: flex; justify-content: flex-end; align-items: center;">
+        <div class="pagenumber-container">
+            <span>20 Saved</span>
+            <span class="divider">|</span>
+            <a href="#" class="page-link">< Prev</a>
+            <a href="#" class="page-link active">1</a>
+            <a href="#" class="page-link">2</a>
+            <a href="#" class="page-link">3</a>
+            <a href="#" class="page-link">Next ></a>
+        </div>
+    </div>
+    <div class="list-container">
+        <div class="list-item">
+            <div class="index">1.</div>
+            <div class="front-page-placeholder">FRONT PAGE</div>
+            <div class="item-details">
+                <h3>Test Title 3</h3>
+                <p>Author Name</p>
+                <p>2026, PublicationType</p>
+            </div>
+            <div class="icon-bookmark filled" title="Unsave"></div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
