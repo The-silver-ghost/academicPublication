@@ -18,7 +18,7 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
-    print(f"✅ Created directory: {UPLOAD_FOLDER}")
+    print(f"Created directory: {UPLOAD_FOLDER}")
 
 def get_db_connection():
     conn = sqlite3.connect(DB_NAME)
