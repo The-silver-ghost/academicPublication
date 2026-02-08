@@ -4,59 +4,128 @@
     <title>Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    
     <script src="{{ url_for('static', filename='script.js') }}"></script>
+    
+    <style>
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 20px 30px;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.6);
+            border-bottom: 1px solid var(--border);
+        }
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        /* Hidden canvas for PDF generation */
+        #reportCanvasContainer {
+            position: absolute;
+            left: -9999px;
+            top: -9999px;
+        }
+    </style>
 </head>
 <body>
     <header>
         <span class="icon" onclick="toggleMenu()"><i class="fas fa-bars"></i></span>
-        <span class="header-title">Analytics</span>
+        <span class="header-title">Analytics Dashboard</span>
         <span class="icon"><i class="fas fa-user-shield"></i></span>
     </header>
 
-    <div class="toolbar" style="justify-content: flex-start; gap: 15px;">
-        <label style="color:var(--text-muted); font-weight:600;"><i class="fas fa-filter"></i> Filter Year:</label>
-        <form action="{{ url_for('admin_dashboard') }}" method="GET">
-            <select name="year" class="form-control" onchange="this.form.submit()" style="width: auto; padding: 8px 15px;">
-                <option value="All">All Time</option>
-                {% for y in years %}
-                    <option value="{{ y }}" {% if year_filter == y %}selected{% endif %}>{{ y }}</option>
-                {% endfor %}
-            </select>
+    <div class="toolbar">
+        <form action="{{ url_for('admin_dashboard') }}" method="GET" class="search-container" style="width: 300px; margin: 0;">
+            <input type="text" name="search_user" placeholder="Search User Name/ID..." value="{{ request.args.get('search_user', '') }}">
+            <input type="hidden" name="faculty" value="{{ request.args.get('faculty', '') }}">
+            <input type="hidden" name="year" value="{{ request.args.get('year', 'All') }}">
+            <button type="submit"><i class="fas fa-search"></i></button>
+        </form>
+
+        <div style="flex-grow: 1;"></div>
+
+        <form action="{{ url_for('admin_dashboard') }}" method="GET" style="display:flex; gap: 20px; flex-wrap: wrap;">
+            {% if request.args.get('search_user') %}
+                <input type="hidden" name="search_user" value="{{ request.args.get('search_user') }}">
+            {% endif %}
+
+            <div class="filter-group">
+                <label style="color:var(--text-muted); font-weight:600;"><i class="fas fa-building"></i> Faculty:</label>
+                <select name="faculty" class="form-control" onchange="this.form.submit()" style="width: auto; padding: 8px 15px;">
+                    <option value="">All Faculties</option>
+                    <option value="FCI" {% if request.args.get('faculty') == 'FCI' %}selected{% endif %}>FCI</option>
+                    <option value="FCM" {% if request.args.get('faculty') == 'FCM' %}selected{% endif %}>FCM</option>
+                    <option value="FOM" {% if request.args.get('faculty') == 'FOM' %}selected{% endif %}>FOM</option>
+                    <option value="FAIE" {% if request.args.get('faculty') == 'FAIE' %}selected{% endif %}>FAIE</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label style="color:var(--text-muted); font-weight:600;"><i class="fas fa-calendar"></i> Year:</label>
+                <select name="year" class="form-control" onchange="this.form.submit()" style="width: auto; padding: 8px 15px;">
+                    <option value="All">All Time</option>
+                    {% for y in years %}
+                        <option value="{{ y }}" {% if year_filter == y %}selected{% endif %}>{{ y }}</option>
+                    {% endfor %}
+                </select>
+            </div>
         </form>
     </div>
 
-    <div class="dashboard-grid">
-        <div class="chart-box">
-            <h3 style="margin-bottom: 20px; color: var(--primary);">Papers Published Annually</h3>
-            <canvas id="annualChart"></canvas>
-            <button class="btn btn-blue" style="margin-top: 20px; width:100%;" onclick="window.print()">
-                <i class="fas fa-file-pdf"></i> Generate Report
+    <div class="dashboard-grid" style="align-items: stretch;">
+        
+        <div class="chart-box" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="margin-bottom: 10px;">
+                <h3 style="color: var(--primary);">Papers Published Annually</h3>
+            </div>
+            <div style="flex-grow: 1; position: relative; min-height: 400px;">
+                <canvas id="annualChart"></canvas>
+            </div>
+            
+            <button id="btnGenerateReport" class="btn btn-blue" onclick="generateReport()" style="margin-top: 20px; width: 100%;">
+                <i class="fas fa-file-pdf"></i> Generate Full Report
             </button>
         </div>
 
-        <div>
-            <div class="chart-box" style="margin-bottom: 20px;">
+        <div style="display: flex; flex-direction: column; gap: 2rem;">
+            <div class="chart-box" style="flex: 1;">
                 <h3 style="margin-bottom: 20px; color: var(--accent);">Publication Types</h3>
                 <div style="height: 250px; display:flex; justify-content:center;">
                     <canvas id="typeChart"></canvas>
                 </div>
             </div>
 
-            <div class="chart-box">
+            {% if not request.args.get('search_user') %}
+            <div class="chart-box" style="flex: 1;">
                 <h3 style="margin-bottom: 20px; color: #10b981;">Top 5 Author Productivity</h3>
-                <canvas id="authorChart"></canvas>
+                <div style="height: 250px;">
+                    <canvas id="authorChart"></canvas>
+                </div>
             </div>
+            {% endif %}
         </div>
+    </div>
+
+    <div id="reportCanvasContainer">
+        <canvas id="pdfCanvas" width="800" height="400"></canvas>
     </div>
     
     <script>
+        // --- 1. Dashboard View Logic (Existing) ---
         const annualData = {{ annual | tojson }};
         const typeData = {{ types | tojson }};
-        const authorData = {{ authors | tojson }};
+        const authorData = {{ authors | tojson if authors else 'null' }};
 
         Chart.defaults.color = '#94a3b8';
-        Chart.defaults.borderColor = 'rgba(255,255,255,0.1)';
+        Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
+        Chart.defaults.font.family = "'Inter', sans-serif";
 
         new Chart(document.getElementById('annualChart'), {
             type: 'bar',
@@ -64,7 +133,7 @@
                 labels: annualData.labels,
                 datasets: [{ label: 'Papers', data: annualData.data, backgroundColor: '#3b82f6', borderRadius: 4 }]
             },
-            options: { scales: { y: { beginAtZero: true } } }
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
         });
 
         new Chart(document.getElementById('typeChart'), {
@@ -73,17 +142,149 @@
                 labels: typeData.labels,
                 datasets: [{ data: typeData.data, backgroundColor: ['#f59e0b', '#ef4444', '#10b981', '#3b82f6'], borderWidth: 0 }]
             },
-            options: { maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
         });
 
-        new Chart(document.getElementById('authorChart'), {
-            type: 'bar',
-            indexAxis: 'y',
-            data: {
-                labels: authorData.labels,
-                datasets: [{ label: 'Papers', data: authorData.data, backgroundColor: '#10b981', borderRadius: 4 }]
+        if (authorData && document.getElementById('authorChart')) {
+            new Chart(document.getElementById('authorChart'), {
+                type: 'bar', indexAxis: 'y',
+                data: {
+                    labels: authorData.labels,
+                    datasets: [{ label: 'Papers', data: authorData.data, backgroundColor: '#10b981', borderRadius: 4 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        // --- 2. PDF Report Generation Logic (New) ---
+        async function generateReport() {
+            const btn = document.getElementById('btnGenerateReport');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+            btn.disabled = true;
+
+            try {
+                // Fetch UNFILTERED data
+                const response = await fetch('/admin/api/report-data');
+                const data = await response.json();
+
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('p', 'mm', 'a4'); // A4 Size
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const pageHeight = doc.internal.pageSize.getHeight();
+
+                // Helper to add centered title
+                const addTitle = (text, y) => {
+                    doc.setFontSize(18);
+                    doc.setTextColor(40, 40, 40);
+                    doc.text(text, pageWidth / 2, y, { align: 'center' });
+                };
+
+                // --- PAGE 1: University Statistics ---
+                addTitle("University Publication Report", 20);
+                
+                // Table
+                const uniTableData = data.university.annual.labels.map((year, i) => [year, data.university.annual.data[i]]);
+                doc.autoTable({
+                    head: [['Year', 'Total Publications']],
+                    body: uniTableData,
+                    startY: 30,
+                    theme: 'grid',
+                    headStyles: { fillColor: [59, 130, 246] }
+                });
+
+                // Chart: Annual
+                const uniChartImg = await generateChartImage('bar', data.university.annual.labels, data.university.annual.data, 'Papers per Year', '#3b82f6');
+                let finalY = doc.lastAutoTable.finalY + 10;
+                doc.text("Annual Trend", 14, finalY);
+                doc.addImage(uniChartImg, 'PNG', 15, finalY + 5, pageWidth - 30, 80);
+
+                // --- PAGE 2: Faculty Statistics ---
+                doc.addPage();
+                addTitle("Faculty Breakdown", 20);
+
+                // Table
+                const facTableData = data.faculty.labels.map((fac, i) => [fac, data.faculty.data[i]]);
+                doc.autoTable({
+                    head: [['Faculty', 'Total Publications']],
+                    body: facTableData,
+                    startY: 30,
+                    theme: 'grid',
+                    headStyles: { fillColor: [16, 185, 129] }
+                });
+
+                // Chart: Faculty
+                const facChartImg = await generateChartImage('bar', data.faculty.labels, data.faculty.data, 'Papers by Faculty', '#10b981');
+                finalY = doc.lastAutoTable.finalY + 10;
+                doc.text("Faculty Comparison", 14, finalY);
+                doc.addImage(facChartImg, 'PNG', 15, finalY + 5, pageWidth - 30, 80);
+
+                // --- PAGE 3: User Statistics ---
+                doc.addPage();
+                addTitle("User Performance", 20);
+
+                // Table (Top 50 to avoid overflow)
+                const userTableData = data.users.map(u => [u.name, u.count]);
+                doc.autoTable({
+                    head: [['User Name', 'Publications']],
+                    body: userTableData,
+                    startY: 30,
+                    theme: 'grid',
+                    headStyles: { fillColor: [245, 158, 11] }
+                });
+
+                // Chart: Top 10 Users
+                const top10 = data.users.slice(0, 10);
+                const userChartImg = await generateChartImage('bar', top10.map(u => u.name), top10.map(u => u.count), 'Top 10 Authors', '#f59e0b');
+                
+                doc.addPage(); // Charts on separate page if table is long
+                addTitle("Top Authors Chart", 20);
+                doc.addImage(userChartImg, 'PNG', 15, 30, pageWidth - 30, 100);
+
+                // Save
+                doc.save('Full_University_Report.pdf');
+
+            } catch (error) {
+                console.error(error);
+                alert("Error generating report. See console.");
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
-        });
+        }
+
+        // Helper function to render charts to an image for PDF
+        function generateChartImage(type, labels, data, label, color) {
+            return new Promise((resolve) => {
+                const canvas = document.getElementById('pdfCanvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Destroy previous instance if any (rough check)
+                if (window.pdfChartInstance) window.pdfChartInstance.destroy();
+
+                window.pdfChartInstance = new Chart(ctx, {
+                    type: type,
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: label,
+                            data: data,
+                            backgroundColor: color,
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        animation: {
+                            onComplete: () => {
+                                resolve(canvas.toDataURL('image/png'));
+                            }
+                        },
+                        responsive: false,
+                        plugins: { legend: { display: false } } // Clean look for PDF
+                    }
+                });
+            });
+        }
     </script>
 </body>
 </html>
