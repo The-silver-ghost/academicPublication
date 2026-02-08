@@ -5,7 +5,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="{{ url_for('static', filename='script.js') }}"></script>
-    </head>
+</head>
 <body>
     <header>
         <a href="{{ url_for('lecturer_student_home') }}" class="icon" title="Home"><i class="fas fa-home"></i></a>
@@ -84,26 +84,5 @@
             </div>
         </form>
     </div>
-
-    <script>
-        function previewImage(input) {
-            const preview = document.getElementById('coverPreview');
-            const placeholder = document.getElementById('previewText');
-            
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    preview.src = e.target.result;
-                    preview.style.display = 'block';
-                    if(placeholder) placeholder.style.display = 'none';
-                }
-                reader.readAsDataURL(input.files[0]);
-            } else {
-                preview.src = "";
-                preview.style.display = 'none';
-                if(placeholder) placeholder.style.display = 'block';
-            }
-        }
-    </script>
 </body>
 </html>

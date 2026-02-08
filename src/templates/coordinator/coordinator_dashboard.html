@@ -4,8 +4,18 @@
     <title>Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    
     <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <style>
+        .toggle-btn { opacity: 0.5; transition: 0.3s; color: white; border: 1px solid rgba(255,255,255,0.2); }
+        .toggle-btn:hover { opacity: 0.8; }
+        .toggle-btn.active { opacity: 1; background: rgba(255,255,255,0.1); border-color: var(--primary); box-shadow: 0 0 10px rgba(59, 130, 246, 0.3); }
+        #reportCanvasContainer { position: absolute; left: -9999px; top: -9999px; }
+    </style>
 </head>
 <body>
     <header>
@@ -13,10 +23,10 @@
         <span class="header-title">Analytics</span>
         
         <div style="display: flex; gap: 10px;">
-            <a href="{{ url_for('coordinator_dashboard', mode='faculty') }}" class="btn mode-btn {% if mode == 'faculty' %}active{% endif %}" style="text-decoration:none; padding: 8px 20px;">
+            <a href="{{ url_for('coordinator_dashboard', mode='faculty') }}" class="btn toggle-btn {% if mode == 'faculty' %}active{% endif %}" style="text-decoration:none; padding: 8px 20px;">
                 <i class="fas fa-university"></i> Faculty
             </a>
-            <a href="{{ url_for('coordinator_dashboard', mode='personal') }}" class="btn mode-btn {% if mode == 'personal' %}active{% endif %}" style="text-decoration:none; padding: 8px 20px;">
+            <a href="{{ url_for('coordinator_dashboard', mode='personal') }}" class="btn toggle-btn {% if mode == 'personal' %}active{% endif %}" style="text-decoration:none; padding: 8px 20px;">
                 <i class="fas fa-user"></i> Personal
             </a>
         </div>
@@ -37,17 +47,22 @@
         </form>
     </div>
 
-    <div class="dashboard-grid">
-        <div class="chart-box">
-            <h3 style="margin-bottom: 20px; color: var(--primary);">Papers Published Annually</h3>
-            <canvas id="annualChart"></canvas>
-            <button class="btn btn-blue" style="margin-top: 20px; width:100%;" onclick="window.print()">
-                <i class="fas fa-file-pdf"></i> Generate Report
+    <div class="dashboard-grid" style="align-items: stretch;">
+        <div class="chart-box" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="margin-bottom: 10px;">
+                <h3 style="color: var(--primary);">Papers Published Annually</h3>
+            </div>
+            <div style="flex-grow: 1; position: relative; min-height: 350px;">
+                <canvas id="annualChart"></canvas>
+            </div>
+            
+            <button id="btnGenerateReport" class="btn btn-blue" style="margin-top: 20px; width:100%;" onclick="generateReport('{{ mode }}')">
+                <i class="fas fa-file-pdf"></i> Generate {{ mode|capitalize }} Report
             </button>
         </div>
 
-        <div>
-            <div class="chart-box" style="margin-bottom: 20px;">
+        <div style="display: flex; flex-direction: column; gap: 2rem;">
+            <div class="chart-box" style="flex: 1;">
                 <h3 style="margin-bottom: 20px; color: var(--accent);">Publication Types</h3>
                 <div style="height: 250px; display:flex; justify-content:center;">
                     <canvas id="typeChart"></canvas>
@@ -55,21 +70,28 @@
             </div>
 
             {% if mode == 'faculty' %}
-            <div class="chart-box">
+            <div class="chart-box" style="flex: 1;">
                 <h3 style="margin-bottom: 20px; color: #10b981;">Top 5 Author Productivity</h3>
-                <canvas id="authorChart"></canvas>
+                <div style="height: 250px;">
+                    <canvas id="authorChart"></canvas>
+                </div>
             </div>
             {% endif %}
         </div>
     </div>
     
+    <div id="reportCanvasContainer">
+        <canvas id="pdfCanvas" width="800" height="400"></canvas>
+    </div>
+
     <script>
         const annualData = {{ annual | tojson }};
         const typeData = {{ types | tojson }};
-        const authorData = {{ authors | tojson }};
+        const authorData = {{ authors | tojson if authors else 'null' }};
 
         Chart.defaults.color = '#94a3b8';
-        Chart.defaults.borderColor = 'rgba(255,255,255,0.1)';
+        Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
+        Chart.defaults.font.family = "'Inter', sans-serif";
 
         new Chart(document.getElementById('annualChart'), {
             type: 'bar',
@@ -77,7 +99,7 @@
                 labels: annualData.labels,
                 datasets: [{ label: 'Papers', data: annualData.data, backgroundColor: '#3b82f6', borderRadius: 4 }]
             },
-            options: { scales: { y: { beginAtZero: true } } }
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true }, x: { grid: { display: false } } } }
         });
 
         new Chart(document.getElementById('typeChart'), {
@@ -86,19 +108,129 @@
                 labels: typeData.labels,
                 datasets: [{ data: typeData.data, backgroundColor: ['#f59e0b', '#ef4444', '#10b981', '#3b82f6'], borderWidth: 0 }]
             },
-            options: { maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
         });
 
         {% if mode == 'faculty' %}
-        new Chart(document.getElementById('authorChart'), {
-            type: 'bar',
-            indexAxis: 'y',
-            data: {
-                labels: authorData.labels,
-                datasets: [{ label: 'Papers', data: authorData.data, backgroundColor: '#10b981', borderRadius: 4 }]
-            }
-        });
+        if (authorData) {
+            new Chart(document.getElementById('authorChart'), {
+                type: 'bar', indexAxis: 'y',
+                data: {
+                    labels: authorData.labels,
+                    datasets: [{ label: 'Papers', data: authorData.data, backgroundColor: '#10b981', borderRadius: 4 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { x: { beginAtZero: true }, y: { grid: { display: false } } } }
+            });
+        }
         {% endif %}
+
+        async function generateReport(mode) {
+            const btn = document.getElementById('btnGenerateReport');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(`/coordinator/api/report-data?mode=${mode}`);
+                const data = await response.json();
+
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('p', 'mm', 'a4');
+                const pageWidth = doc.internal.pageSize.getWidth();
+
+                const addTitle = (text, y) => {
+                    doc.setFontSize(18);
+                    doc.setTextColor(40, 40, 40);
+                    doc.text(text, pageWidth / 2, y, { align: 'center' });
+                };
+
+                if (mode === 'faculty') {
+                    // --- FACULTY REPORT ---
+                    addTitle(`Faculty Report: ${data.faculty_id}`, 20);
+
+                    // Table 1: Annual
+                    doc.autoTable({
+                        head: [['Year', 'Total Publications']],
+                        body: data.annual.labels.map((y, i) => [y, data.annual.data[i]]),
+                        startY: 30, theme: 'grid', headStyles: { fillColor: [59, 130, 246] }
+                    });
+
+                    // Table 2: Top Contributors (Includes Students Now)
+                    let finalY = doc.lastAutoTable.finalY + 10;
+                    doc.text("Top Contributors", 14, finalY);
+                    doc.autoTable({
+                        head: [['Author Name', 'Papers']],
+                        body: data.authors.map(a => [a.name, a.count]),
+                        startY: finalY + 5, theme: 'grid', headStyles: { fillColor: [16, 185, 129] }
+                    });
+
+                    doc.addPage();
+                    addTitle("Faculty Performance Charts", 20);
+                    const annualImg = await generateChartImage('bar', data.annual.labels, data.annual.data, 'Papers/Year', '#3b82f6');
+                    doc.addImage(annualImg, 'PNG', 15, 30, pageWidth - 30, 80);
+
+                    const authorImg = await generateChartImage('bar', data.authors.map(a=>a.name), data.authors.map(a=>a.count), 'Top Authors', '#10b981');
+                    doc.addImage(authorImg, 'PNG', 15, 120, pageWidth - 30, 80);
+
+                } else {
+                    // --- PERSONAL REPORT (UPDATED) ---
+                    addTitle(`Publication Record: ${data.name}`, 20);
+                    
+                    // Specific Columns: Year, Title, Authors, Type
+                    const tableBody = data.papers.map(p => [
+                        p.year, 
+                        p.title,
+                        p.authors,  // Now includes full author string
+                        p.type
+                    ]);
+
+                    doc.autoTable({
+                        head: [['Year', 'Title', 'Authors', 'Type']],
+                        body: tableBody,
+                        startY: 30,
+                        theme: 'striped',
+                        headStyles: { fillColor: [139, 92, 246] },
+                        columnStyles: {
+                            0: { cellWidth: 20 }, 
+                            1: { cellWidth: 50 }, 
+                            2: { cellWidth: 'auto' }, 
+                            3: { cellWidth: 25 }
+                        }
+                    });
+                }
+
+                doc.save(`${mode}_report.pdf`);
+
+            } catch (error) {
+                console.error(error);
+                alert("Error generating report.");
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        function generateChartImage(type, labels, data, label, color) {
+            return new Promise((resolve) => {
+                const canvas = document.getElementById('pdfCanvas');
+                const ctx = canvas.getContext('2d');
+                if (window.pdfChartInstance) window.pdfChartInstance.destroy();
+
+                window.pdfChartInstance = new Chart(ctx, {
+                    type: type,
+                    data: {
+                        labels: labels,
+                        datasets: [{ label: label, data: data, backgroundColor: color, borderWidth: 1 }]
+                    },
+                    options: {
+                        animation: { onComplete: () => resolve(canvas.toDataURL('image/png')) },
+                        responsive: false,
+                        plugins: { legend: { display: false } },
+                        indexAxis: (type === 'bar' && labels.length > 5) ? 'y' : 'x'
+                    }
+                });
+            });
+        }
     </script>
 </body>
 </html>

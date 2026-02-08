@@ -339,3 +339,8 @@ header {
 }
 .page-link { padding: 4px 10px; border-radius: 6px; }
 .page-link.active { background: var(--primary); color: white; }
+
+select.form-control option {
+    background-color: #1e293b;
+    color: #f8fafc;
+}

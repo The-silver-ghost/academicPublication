@@ -1,131 +1,110 @@
 <!DOCTYPE html>
 <html>
-
 <head>
+    <title>Search Results</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="{{ url_for('static', filename='script.js') }}"></script>
     <style>
         .filter-menu {
             display: none;
             position: absolute;
-            background: #000a20;
-            border: 1px solid #444;
-            padding: 15px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 20px;
             z-index: 100;
             margin-top: 10px;
-            min-width: 200px;
+            min-width: 250px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
         }
-
-        .filter-group {
-            margin-bottom: 10px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .filter-group label {
-            color: white;
-            font-size: 12px;
-            margin-bottom: 5px;
-        }
-
-        .filter-group select,
-        .filter-group input {
-            padding: 5px;
-            color: black;
-        }
-
-        /* Bookmark Button Styling */
-        .btn-bookmark {
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 0;
-        }
+        .btn-bookmark { background: none; border: none; cursor: pointer; padding: 0; }
     </style>
-    <script>
-        function toggleFilters() {
-            var menu = document.getElementById("filterMenu");
-            menu.style.display = (menu.style.display === "block") ? "none" : "block";
-        }
-    </script>
 </head>
-
 <body>
     <header>
-        <span class="icon" onclick="toggleMenu()">&#9776;</span>
-        <form action="{{ url_for('lecturer_student_search_results') }}" method="GET"
-            style="display:flex; align-items:center;">
+        <span class="icon" onclick="toggleMenu()"><i class="fas fa-bars"></i></span>
+        
+        <form action="{{ url_for('lecturer_student_search_results') }}" method="GET" style="display:flex; align-items:center;">
             <div class="search-container" style="width: 500px;">
                 <input type="text" name="query" placeholder="Search..." value="{{ request.args.get('query', '') }}">
                 <input type="hidden" name="filter_type" value="{{ request.args.get('filter_type', '') }}">
                 <input type="hidden" name="filter_year" value="{{ request.args.get('filter_year', '') }}">
-                <button type="submit"
-                    style="background:none; border:none; cursor:pointer;"><span>&#128269;</span></button>
+                <button type="submit"><i class="fas fa-search"></i></button>
             </div>
         </form>
-        <span class="icon">&#128100;</span>
+        <a href="{{ url_for('lecturer_student_dashboard') }}" class="icon"><i class="fas fa-chart-pie"></i></a>
     </header>
 
-    <div
-        style="background: #000a20; padding: 10px; display: flex; justify-content: space-between; align-items: center; position: relative;">
-        <div>
-            <button class="filter-btn" onclick="toggleFilters()" style="margin:0;">Filter ></button>
-            <form action="{{ url_for('lecturer_student_search_results') }}" method="GET" class="filter-menu"
-                id="filterMenu">
+    <div class="toolbar">
+        <div style="position: relative;">
+            <button class="filter-btn" onclick="toggleFilters()">
+                <i class="fas fa-filter"></i> Filters
+            </button>
+            
+            <form action="{{ url_for('lecturer_student_search_results') }}" method="GET" class="filter-menu" id="filterMenu">
                 <input type="hidden" name="query" value="{{ request.args.get('query', '') }}">
-                <div class="filter-group"><label>Paper Type</label><select name="filter_type">
+                <div class="form-group">
+                    <label>Paper Type</label>
+                    <select name="filter_type" class="form-control">
                         <option value="">All Types</option>
-                        <option value="Journal" {% if request.args.get('filter_type')=='Journal' %}selected{% endif %}>
-                            Journal</option>
-                        <option value="Conference" {% if request.args.get('filter_type')=='Conference' %}selected{%
-                            endif %}>Conference</option>
-                        <option value="Book" {% if request.args.get('filter_type')=='Book' %}selected{% endif %}>Book
-                        </option>
-                    </select></div>
-                <div class="filter-group"><label>Year</label><input type="number" name="filter_year" placeholder="YYYY"
-                        value="{{ request.args.get('filter_year', '') }}"></div>
-                <button type="submit" class="btn btn-blue"
-                    style="width:100%; font-size:12px; padding:5px;">Apply</button>
+                        <option value="Journal" {% if request.args.get('filter_type')=='Journal' %}selected{% endif %}>Journal</option>
+                        <option value="Conference" {% if request.args.get('filter_type')=='Conference' %}selected{% endif %}>Conference</option>
+                        <option value="Book" {% if request.args.get('filter_type')=='Book' %}selected{% endif %}>Book</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Year</label>
+                    <input type="number" name="filter_year" class="form-control" placeholder="YYYY" value="{{ request.args.get('filter_year', '') }}">
+                </div>
+                <button type="submit" class="btn btn-blue" style="width:100%;">Apply</button>
             </form>
         </div>
+
         <div class="pagenumber-container">
-            <span>{{ total }} Results</span> <span class="divider">|</span>
-            {% if current_page > 1 %}<a
-                href="{{ url_for('lecturer_student_search_results', page=current_page-1, query=request.args.get('query'), filter_type=request.args.get('filter_type'), filter_year=request.args.get('filter_year')) }}"
-                class="page-link">&lt; Prev</a>{% endif %}
-            {% for p in range(1, pages + 1) %}<a
-                href="{{ url_for('lecturer_student_search_results', page=p, query=request.args.get('query'), filter_type=request.args.get('filter_type'), filter_year=request.args.get('filter_year')) }}"
-                class="page-link {% if p == current_page %}active{% endif %}">{{ p }}</a>{% endfor %}
-            {% if current_page < pages %}<a
-                href="{{ url_for('lecturer_student_search_results', page=current_page+1, query=request.args.get('query'), filter_type=request.args.get('filter_type'), filter_year=request.args.get('filter_year')) }}"
-                class="page-link">Next &gt;</a>{% endif %}
+            <span>{{ total }} Results</span>
+            <span style="margin: 0 10px; color: var(--border);">|</span>
+            {% if current_page > 1 %}
+                <a href="{{ url_for('lecturer_student_search_results', page=current_page-1, query=request.args.get('query'), filter_type=request.args.get('filter_type'), filter_year=request.args.get('filter_year')) }}" class="page-link"><i class="fas fa-chevron-left"></i></a>
+            {% endif %}
+            {% for p in range(1, pages + 1) %}
+                <a href="{{ url_for('lecturer_student_search_results', page=p, query=request.args.get('query'), filter_type=request.args.get('filter_type'), filter_year=request.args.get('filter_year')) }}" class="page-link {% if p == current_page %}active{% endif %}">{{ p }}</a>
+            {% endfor %}
+            {% if current_page < pages %}
+                <a href="{{ url_for('lecturer_student_search_results', page=current_page+1, query=request.args.get('query'), filter_type=request.args.get('filter_type'), filter_year=request.args.get('filter_year')) }}" class="page-link"><i class="fas fa-chevron-right"></i></a>
+            {% endif %}
         </div>
     </div>
 
     <div class="list-container">
         {% for paper in papers %}
         <div class="list-item">
-            <div class="index">{{ (current_page - 1) * 10 + loop.index }}.</div>
-            {% if paper.CoverImage %}<img src="{{ url_for('static', filename='uploads/covers/' + paper.CoverImage) }}"
-                class="front-page-placeholder" style="object-fit: cover;">{% else %}<div class="front-page-placeholder">
-                FRONT PAGE</div>{% endif %}
-            <div class="item-details">
-                <h3><a href="{{ paper.LinkToPaper }}" target="_blank" style="text-decoration:none; color:inherit;">{{
-                        paper.PaperTitle }}</a></h3>
-                <p>Author(s): {{ paper.Authors }}</p>
-                <p>{{ paper.DatePublished }}, {{ paper.PaperType }}</p>
+            <div class="index">{{ (current_page - 1) * 10 + loop.index }}</div>
+            
+            {% if paper.CoverImage %}
+                <img src="{{ url_for('static', filename='uploads/covers/' + paper.CoverImage) }}" style="width: 80px; height: 110px; object-fit: cover; border-radius: 6px;">
+            {% else %}
+                <div class="front-page-placeholder" style="width: 80px; height: 110px;"><i class="fas fa-file-alt fa-2x"></i></div>
+            {% endif %}
+            
+            <div class="item-details" style="flex: 1;">
+                <h3><a href="{{ paper.LinkToPaper }}" target="_blank">{{ paper.PaperTitle }}</a></h3>
+                <p><i class="fas fa-user-edit"></i> {{ paper.Authors }}</p>
+                <p><i class="far fa-calendar-alt"></i> {{ paper.DatePublished }} &bull; {{ paper.PaperType }}</p>
             </div>
 
             <form action="{{ url_for('toggle_bookmark') }}" method="POST">
                 <input type="hidden" name="paper_id" value="{{ paper.PaperID }}">
                 <button type="submit" class="btn-bookmark">
-                    <div class="icon-bookmark {% if paper.IsBookmarked %}filled{% endif %}" title="Toggle Bookmark">
-                    </div>
+                    <i class="{% if paper.IsBookmarked %}fas{% else %}far{% endif %} fa-bookmark icon-bookmark {% if paper.IsBookmarked %}filled{% endif %}"></i>
                 </button>
             </form>
         </div>
-        {% else %}<div style="padding: 20px; text-align: center; color: white;">No approved papers found matching your
-            search.</div>{% endfor %}
+        {% else %}
+            <div style="text-align: center; padding: 4rem; color: var(--text-muted);">
+                <p>No results found matching your search.</p>
+            </div>
+        {% endfor %}
     </div>
 </body>
 </html>

@@ -17,8 +17,8 @@ document.addEventListener("DOMContentLoaded", function() {
         homeLink = '/admin/home';
         menuLinks = `
             <a href="/admin/bookmarks"><i class="fas fa-bookmark"></i> Bookmarks</a>
-            <a href="/admin/requests"><i class="fas fa-clipboard-list"></i> Tracking Requests</a>
             <a href="/admin/dashboard"><i class="fas fa-chart-pie"></i> Analytics</a>
+            <a href="/admin/requests"><i class="fas fa-clipboard-list"></i> Request Tracking</a>
             <a href="/admin/status"><i class="fas fa-tasks"></i> Publication Status</a>
             <a href="/admin/users"><i class="fas fa-users-cog"></i> User Management</a>
         `;
@@ -26,8 +26,8 @@ document.addEventListener("DOMContentLoaded", function() {
         homeLink = '/coordinator/home';
         menuLinks = `
             <a href="/coordinator/bookmarks"><i class="fas fa-bookmark"></i> Bookmarks</a>
-            <a href="/coordinator/requests"><i class="fas fa-clipboard-list"></i> Tracking Requests</a>
             <a href="/coordinator/dashboard"><i class="fas fa-chart-pie"></i> Analytics</a>
+            <a href="/coordinator/requests"><i class="fas fa-clipboard-list"></i> Request Tracking</a>
             <a href="/coordinator/status"><i class="fas fa-tasks"></i> Publication Status</a>
         `;
     } else if (role === 'academic') { // Lecturer/Student

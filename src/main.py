@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 import sqlite3
 import os
 import uuid
@@ -30,6 +30,223 @@ def clean_name(name):
     for title in ["dr.", "prof.", "mr.", "ms.", "ir.", "ts."]:
         name = name.replace(title, "")
     return name.strip()
+
+@app.route('/admin/api/report-data')
+def get_report_data():
+    if session.get('role') != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    conn = get_db_connection()
+    
+    # 1. Fetch ALL Papers for general stats
+    papers = conn.execute("SELECT * FROM Paper").fetchall()
+    
+    # --- University Stats ---
+    years = {}
+    types = {}
+    for p in papers:
+        y = p['DatePublished'][:4]
+        years[y] = years.get(y, 0) + 1
+        t = p['PaperType']
+        types[t] = types.get(t, 0) + 1
+
+    # --- Faculty Stats ---
+    # We link papers to faculty via the uploader (Lecturer OR Student)
+    faculty_query = '''
+        SELECT f.FacultyName, COUNT(p.PaperID) as Count
+        FROM Paper p
+        LEFT JOIN Lecturer l ON p.LecturerID = l.LecturerID
+        LEFT JOIN Student s ON p.StudentID = s.StudentID
+        LEFT JOIN Faculty f ON (l.FacultyID = f.FacultyID OR s.FacultyID = f.FacultyID)
+        WHERE f.FacultyName IS NOT NULL
+        GROUP BY f.FacultyName
+    '''
+    faculty_rows = conn.execute(faculty_query).fetchall()
+    faculty_stats = {row['FacultyName']: row['Count'] for row in faculty_rows}
+
+    user_stats_list = []
+
+    # A. Student Counts
+    stu_rows = conn.execute('''
+        SELECT s.StudentName as Name, COUNT(p.PaperID) as Count 
+        FROM Paper p 
+        JOIN Student s ON p.StudentID = s.StudentID 
+        GROUP BY s.StudentName
+    ''').fetchall()
+    for row in stu_rows:
+        user_stats_list.append({'name': row['Name'] + " (Student)", 'count': row['Count']})
+
+    # B. Lecturer Counts
+    lec_rows = conn.execute('''
+        SELECT l.LecturerName as Name, COUNT(p.PaperID) as Count 
+        FROM Paper p 
+        JOIN Lecturer l ON p.LecturerID = l.LecturerID 
+        GROUP BY l.LecturerName
+    ''').fetchall()
+    for row in lec_rows:
+        # Check if name already exists (e.g. if we want to merge, but usually keeping them separate is safer)
+        user_stats_list.append({'name': row['Name'], 'count': row['Count']})
+
+    # C. Coordinator Counts
+    coord_rows = conn.execute('''
+        SELECT c.CoordinatorName as Name, COUNT(p.PaperID) as Count 
+        FROM Paper p 
+        JOIN ProgrammeCoordinator c ON p.CoordinatorID = c.CoordinatorID 
+        GROUP BY c.CoordinatorName
+    ''').fetchall()
+    for row in coord_rows:
+        user_stats_list.append({'name': row['Name'], 'count': row['Count']})
+
+    # Sort combined list by Count descending
+    user_stats_list.sort(key=lambda x: x['count'], reverse=True)
+
+    conn.close()
+
+    return jsonify({
+        'university': {
+            'annual': {'labels': list(years.keys()), 'data': list(years.values())},
+            'types': {'labels': list(types.keys()), 'data': list(types.values())}
+        },
+        'faculty': {
+            'labels': list(faculty_stats.keys()),
+            'data': list(faculty_stats.values())
+        },
+        'users': user_stats_list
+    })
+
+@app.route('/coordinator/api/report-data')
+def get_coordinator_report_data():
+    if session.get('role') != 'coordinator':
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    mode = request.args.get('mode', 'personal')
+    user_id = session.get('user_id')
+    conn = get_db_connection()
+    
+    # Get Coordinator's Faculty
+    coord_row = conn.execute("SELECT FacultyID, CoordinatorName FROM ProgrammeCoordinator WHERE CoordinatorID = ?", (user_id,)).fetchone()
+    if not coord_row:
+        return jsonify({'error': 'Coordinator not found'}), 404
+    
+    faculty_id = coord_row['FacultyID']
+    coord_name = coord_row['CoordinatorName']
+
+    if mode == 'faculty':
+        # --- FACULTY STATS MODE ---
+        
+        # 1. General Stats (Annual & Types) for this Faculty
+        # We check if the uploader (Student or Lecturer) belongs to this faculty
+        query_general = '''
+            SELECT p.DatePublished, p.PaperType
+            FROM Paper p
+            LEFT JOIN Lecturer l ON p.LecturerID = l.LecturerID
+            LEFT JOIN Student s ON p.StudentID = s.StudentID
+            WHERE l.FacultyID = ? OR s.FacultyID = ?
+        '''
+        papers = conn.execute(query_general, (faculty_id, faculty_id)).fetchall()
+        
+        years = {}
+        types = {}
+        for p in papers:
+            y = p['DatePublished'][:4]
+            years[y] = years.get(y, 0) + 1
+            t = p['PaperType']
+            types[t] = types.get(t, 0) + 1
+
+        # 2. User Performance (FIXED: Include Students & Lecturers)
+        authors_list = []
+
+        # Count Student Papers in this Faculty
+        stu_query = '''
+            SELECT s.StudentName as Name, COUNT(p.PaperID) as Count
+            FROM Paper p
+            JOIN Student s ON p.StudentID = s.StudentID
+            WHERE s.FacultyID = ?
+            GROUP BY s.StudentName
+        '''
+        for row in conn.execute(stu_query, (faculty_id,)).fetchall():
+            authors_list.append({'name': row['Name'] + " (Student)", 'count': row['Count']})
+
+        # Count Lecturer Papers in this Faculty
+        lec_query = '''
+            SELECT l.LecturerName as Name, COUNT(p.PaperID) as Count
+            FROM Paper p
+            JOIN Lecturer l ON p.LecturerID = l.LecturerID
+            WHERE l.FacultyID = ?
+            GROUP BY l.LecturerName
+        '''
+        for row in conn.execute(lec_query, (faculty_id,)).fetchall():
+            authors_list.append({'name': row['Name'], 'count': row['Count']})
+
+        # Sort by count descending
+        authors_list.sort(key=lambda x: x['count'], reverse=True)
+
+        conn.close()
+        return jsonify({
+            'mode': 'faculty',
+            'faculty_id': faculty_id,
+            'annual': {'labels': list(years.keys()), 'data': list(years.values())},
+            'types': {'labels': list(types.keys()), 'data': list(types.values())},
+            'authors': authors_list[:10] # Top 10
+        })
+
+    else:
+        # --- PERSONAL MODE ---
+        query = "SELECT * FROM Paper WHERE CoordinatorID = ? ORDER BY DatePublished DESC"
+        papers = conn.execute(query, (user_id,)).fetchall()
+        
+        paper_list = []
+        for p in papers:
+            paper_list.append({
+                'title': p['PaperTitle'],
+                'authors': p['Authors'], # Includes co-authors string
+                'year': p['DatePublished'][:4],
+                'type': p['PaperType']
+            })
+            
+        conn.close()
+        return jsonify({
+            'mode': 'personal',
+            'name': coord_name,
+            'papers': paper_list
+        })
+
+@app.route('/academic/api/report-data')
+def get_academic_report_data():
+    role = session.get('role')
+    if role not in ['lecturer', 'student']:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    user_id = session.get('user_id')
+    conn = get_db_connection()
+
+    # 1. Get User Name & Query
+    if role == 'lecturer':
+        name_row = conn.execute("SELECT LecturerName FROM Lecturer WHERE LecturerID = ?", (user_id,)).fetchone()
+        name = name_row['LecturerName'] if name_row else "Unknown"
+        query = "SELECT * FROM Paper WHERE LecturerID = ? ORDER BY DatePublished DESC"
+    else:
+        name_row = conn.execute("SELECT StudentName FROM Student WHERE StudentID = ?", (user_id,)).fetchone()
+        name = name_row['StudentName'] if name_row else "Unknown"
+        query = "SELECT * FROM Paper WHERE StudentID = ? ORDER BY DatePublished DESC"
+
+    # 2. Fetch Papers
+    papers = conn.execute(query, (user_id,)).fetchall()
+
+    paper_list = []
+    for p in papers:
+        paper_list.append({
+            'title': p['PaperTitle'],
+            'authors': p['Authors'],
+            'year': p['DatePublished'][:4],
+            'type': p['PaperType']
+        })
+
+    conn.close()
+    return jsonify({
+        'name': name,
+        'papers': paper_list
+    })
 
 def get_public_search_results(user_id, page=1, per_page=10):
     search_query = request.args.get('query', '').strip()
@@ -230,7 +447,10 @@ def get_all_years():
         
     return years
 
-def validate_authors_and_get_ids(authors_text):
+def clean_name(name):
+    return name.lower().replace(" ", "").strip()
+
+def validate_authors_and_get_ids(authors_text, bypass_staff_check=False):
     if not authors_text:
         return False, "Author list cannot be empty.", None, None, None
 
@@ -242,7 +462,6 @@ def validate_authors_and_get_ids(authors_text):
     found_lec = None
     found_stu = None
     found_coord = None
-    
     academic_staff_found = False
 
     for author in author_names:
@@ -270,13 +489,13 @@ def validate_authors_and_get_ids(authors_text):
                 if c_name == clean_name(row['StudentName']):
                     if row['IsFinalYear'] != 1:
                          conn.close()
-                         return False, f"Error: Student '{row['StudentName']}' is not Final Year.", None, None, None
+                         return False, f"Error: Student '{row['StudentName']}' is not a Final Year student.", None, None, None
                     found_stu = row['StudentID']
                     break
 
     conn.close()
 
-    if not academic_staff_found:
+    if not academic_staff_found and not bypass_staff_check:
         return False, "Error: Authors must include at least one valid Lecturer or Coordinator.", None, None, None
 
     return True, None, found_lec, found_stu, found_coord
@@ -298,19 +517,21 @@ def process_publication_request(form, file):
 
     req_date = datetime.now().strftime('%Y-%m-%d')
 
-    valid, msg, lec_id, stu_id, coord_id = validate_authors_and_get_ids(authors)
+    is_admin = (user_role == 'admin')
+    valid, msg, lec_id, stu_id, coord_id = validate_authors_and_get_ids(authors, bypass_staff_check=is_admin)
+    
     if not valid:
         flash(msg)
         return False
 
-    if user_role != 'admin':
+    if not is_admin:
         is_author = False
         if user_role == 'lecturer' and lec_id == user_id: is_author = True
         elif user_role == 'student' and stu_id == user_id: is_author = True
         elif user_role == 'coordinator' and coord_id == user_id: is_author = True
         
         if not is_author:
-            flash("Error: You can only request tracking for papers where you are an author.")
+            flash("Error: You can only request tracking for papers where YOU are an author.")
             return False
 
     cover_image = None
@@ -319,7 +540,7 @@ def process_publication_request(form, file):
         cover_image = f"{uuid.uuid4().hex}_{filename}"
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], cover_image))
     else:
-        flash("Error: Valid Cover Page required.")
+        flash("Error: Valid Cover Page (PNG/JPG) required.")
         return False
 
     try:
@@ -327,7 +548,7 @@ def process_publication_request(form, file):
         cursor = conn.cursor()
         paper_id = f"PAP-{uuid.uuid4().hex[:8].upper()}"
         
-        admin_id = user_id if user_role == 'admin' else None
+        admin_id = user_id if is_admin else None
 
         cursor.execute('''
             INSERT INTO Paper (

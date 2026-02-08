@@ -38,18 +38,22 @@
 
             <div class="chart-box">
                 <h3 style="color: var(--primary); margin-bottom: 20px;">Publication Details</h3>
+                
                 <div class="form-group">
                     <label>Title</label>
                     <input type="text" name="title" class="form-control" placeholder="Enter title" required>
                 </div>
+                
                 <div class="form-group">
                     <label>Authors</label>
                     <input type="text" name="authors" class="form-control" placeholder="Comma separated names" required>
                 </div>
+                
                 <div class="form-group">
                     <label>DOI</label>
                     <input type="text" name="doi" class="form-control" placeholder="e.g. 10.1145/...">
                 </div>
+                
                 <div class="form-group">
                     <label>Paper Type</label>
                     <select name="paper_type" class="form-control" required>
@@ -57,16 +61,20 @@
                         <option value="Journal">Journal Article</option>
                         <option value="Conference">Conference Paper</option>
                         <option value="Book">Book Chapter</option>
+                        <option value="Thesis">Thesis</option>
                     </select>
                 </div>
+                
                 <div class="form-group">
                     <label>Date Published</label>
                     <input type="date" name="date_published" class="form-control" required>
                 </div>
+                
                 <div class="form-group">
                     <label>Publication URL</label>
                     <input type="url" name="url" class="form-control" placeholder="https://..." required>
                 </div>
+                
                 <div style="text-align: right; margin-top: 20px;">
                     <button type="submit" class="btn btn-blue" style="padding: 12px 30px;">
                         <i class="fas fa-paper-plane"></i> Submit Request
@@ -75,26 +83,5 @@
             </div>
         </form>
     </div>
-
-    <script>
-        function previewImage(input) {
-            const preview = document.getElementById('coverPreview');
-            const placeholder = document.getElementById('previewText');
-            
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    preview.src = e.target.result;
-                    preview.style.display = 'block';
-                    if(placeholder) placeholder.style.display = 'none';
-                }
-                reader.readAsDataURL(input.files[0]);
-            } else {
-                preview.src = "";
-                preview.style.display = 'none';
-                if(placeholder) placeholder.style.display = 'block';
-            }
-        }
-    </script>
 </body>
 </html>

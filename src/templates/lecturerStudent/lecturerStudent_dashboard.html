@@ -2,66 +2,84 @@
 <html>
 <head>
     <title>Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    
     <script src="{{ url_for('static', filename='script.js') }}"></script>
-    <style>
-        .chart-box { background: #000a20; padding: 20px; border-radius: 10px; border: 1px solid #333; }
-        .filter-select { padding: 5px; background: #333; color: white; border: none; border-radius: 4px; }
-    </style>
 </head>
 <body>
     <header>
-        <span class="icon" onclick="toggleMenu()">&#9776;</span>
-        <span class="header-title">Analytics</span>
-        <a href="{{ url_for('lecturer_student_home') }}" class="icon" style="text-decoration:none; color:inherit;">&#128100;</a>
+        <span class="icon" onclick="toggleMenu()"><i class="fas fa-bars"></i></span>
+        <span class="header-title">Analytics Dashboard</span>
+        <a href="{{ url_for('lecturer_student_home') }}" class="icon" title="Home"><i class="fas fa-home"></i></a>
     </header>
     
-    <div style="padding: 20px; display:flex; gap:10px; align-items:center; background:#000a20;">
-        <label style="color:white;">Filter Year:</label>
+    <div class="toolbar" style="justify-content: flex-start; gap: 15px;">
+        <label style="color:var(--text-muted); font-weight:600;"><i class="fas fa-filter"></i> Filter Year:</label>
         <form action="{{ url_for('lecturer_student_dashboard') }}" method="GET">
-            <select name="year" class="filter-select" onchange="this.form.submit()">
+            <select name="year" class="form-control" onchange="this.form.submit()" style="width: auto; padding: 8px 15px;">
                 <option value="All">All Time</option>
                 {% for y in years %}
                     <option value="{{ y }}" {% if year_filter == y %}selected{% endif %}>{{ y }}</option>
                 {% endfor %}
-                </select>
+            </select>
         </form>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px;">
-        <div class="chart-box">
-            <h3>Papers Published Annually</h3>
-            <canvas id="annualChart"></canvas>
-            <button class="btn btn-blue" style="margin-top: 20px; width:100%;" onclick="window.print()">Generate Report (PDF)</button>
+    <div class="dashboard-grid" style="align-items: stretch;">
+        
+        <div class="chart-box" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="margin-bottom: 10px;">
+                <h3 style="color: var(--primary);">Papers Published Annually</h3>
+            </div>
+            <div style="flex-grow: 1; position: relative; min-height: 350px;">
+                <canvas id="annualChart"></canvas>
+            </div>
+            
+            <button id="btnGenerateReport" class="btn btn-blue" style="margin-top: 20px; width:100%;" onclick="generateReport()">
+                <i class="fas fa-file-pdf"></i> Generate Personal Report
+            </button>
         </div>
 
         <div class="chart-box">
-            <h3>Publication Types</h3>
-            <div style="height: 300px; display:flex; justify-content:center;">
+            <h3 style="margin-bottom: 20px; color: var(--accent);">Publication Types</h3>
+            <div style="height: 350px; display:flex; justify-content:center;">
                 <canvas id="typeChart"></canvas>
             </div>
         </div>
     </div>
     
     <script>
+        // --- 1. Charts Logic ---
         const annualData = {{ annual | tojson }};
         const typeData = {{ types | tojson }};
+
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
+        Chart.defaults.font.family = "'Inter', sans-serif";
 
         new Chart(document.getElementById('annualChart'), {
             type: 'bar',
             data: {
                 labels: annualData.labels,
-                datasets: [{
-                    label: '# of Papers',
-                    data: annualData.data,
-                    backgroundColor: ['cyan', '#33aadd', '#2288cc', '#1166aa', 'purple']
+                datasets: [{ 
+                    label: 'Papers', 
+                    data: annualData.data, 
+                    backgroundColor: '#3b82f6', 
+                    borderRadius: 4 
                 }]
             },
-            options: {
-                responsive: true,
-                scales: { y: { beginAtZero: true } },
-                plugins: { legend: { display: false } }
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                scales: { 
+                    y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    x: { grid: { display: false } }
+                } 
             }
         });
 
@@ -69,16 +87,73 @@
             type: 'doughnut',
             data: {
                 labels: typeData.labels,
-                datasets: [{
-                    data: typeData.data,
-                    backgroundColor: ['orange', 'red', 'green', '#2288cc']
+                datasets: [{ 
+                    data: typeData.data, 
+                    backgroundColor: ['#f59e0b', '#ef4444', '#10b981', '#3b82f6'], 
+                    borderWidth: 0 
                 }]
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: { legend: { position: 'right' } } 
             }
         });
+
+        // --- 2. Report Generation Logic ---
+        async function generateReport() {
+            const btn = document.getElementById('btnGenerateReport');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+            btn.disabled = true;
+
+            try {
+                // Fetch Data
+                const response = await fetch('/academic/api/report-data');
+                const data = await response.json();
+
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('p', 'mm', 'a4');
+                const pageWidth = doc.internal.pageSize.getWidth();
+
+                // Title
+                doc.setFontSize(18);
+                doc.setTextColor(40, 40, 40);
+                doc.text(`Publication Record: ${data.name}`, pageWidth / 2, 20, { align: 'center' });
+
+                // Table Data
+                const tableBody = data.papers.map(p => [
+                    p.year, 
+                    p.title, 
+                    p.authors, 
+                    p.type
+                ]);
+
+                // Generate Table
+                doc.autoTable({
+                    head: [['Year', 'Title', 'Authors', 'Type']],
+                    body: tableBody,
+                    startY: 30,
+                    theme: 'striped',
+                    headStyles: { fillColor: [59, 130, 246] }, // Blue for academic
+                    columnStyles: {
+                        0: { cellWidth: 20 }, // Year
+                        1: { cellWidth: 50 }, // Title
+                        2: { cellWidth: 'auto' }, // Authors
+                        3: { cellWidth: 25 }  // Type
+                    }
+                });
+
+                doc.save('My_Publications_Report.pdf');
+
+            } catch (error) {
+                console.error(error);
+                alert("Error generating report.");
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
     </script>
 </body>
 </html>
