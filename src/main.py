@@ -11,14 +11,19 @@ from collections import Counter
 
 app = Flask(__name__)
 app.secret_key = '2002200520092005'
-DB_NAME = 'trackingsystem.db'
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads', 'covers')
+STATIC_DIR = os.path.join(BASE_DIR, 'static')
+app = Flask(__name__, static_folder=STATIC_DIR) 
+app.secret_key = '2002200520092005'
+DB_NAME = 'trackingsystem.db'
+UPLOAD_FOLDER = os.path.join(STATIC_DIR, 'uploads', 'covers')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
-    print(f"Created directory: {UPLOAD_FOLDER}")
+    print(f"Created New Directory: {UPLOAD_FOLDER}")
+else:
+    print(f"Saving images to: {UPLOAD_FOLDER}")
 
 def get_db_connection():
     conn = sqlite3.connect(DB_NAME)
