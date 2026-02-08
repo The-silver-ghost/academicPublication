@@ -55,7 +55,7 @@
                 <p><i class="far fa-calendar-alt"></i> {{ paper.DatePublished }} &bull; {{ paper.PaperType }}</p>
             </div>
             
-            <div style="display: flex; gap: 8px; align-items: center;">
+            <div style="display: flex; gap: 8px; align-items: flex-end;">
                 {% if paper.Status == 'Approved' %}
                     <a href="{{ url_for('view_feedback_detail') }}?id={{ paper.PaperID }}" class="btn" style="background: var(--bg-main); border: 1px solid var(--border); font-size: 0.8rem;">Feedback</a>
                     <div class="status-arrow st-approved"><i class="fas fa-check"></i> Approved</div>
