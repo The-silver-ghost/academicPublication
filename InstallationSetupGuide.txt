@@ -1,0 +1,6 @@
+1.Run the main.py
+2.Log in based on your account
+3.You can start exploring the system
+4.If you want to search papers : type on the search box in the middle and it will display results
+5.If you want to request tracking : navigate to request tracking and upload the details
+6.Then wait for the coordinator to approve
